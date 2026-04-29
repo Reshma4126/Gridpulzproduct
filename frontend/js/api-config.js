@@ -19,8 +19,8 @@ function getBackendURL() {
         return 'http://localhost:8000';
     }
     
-    // For production: use current origin (backend should serve frontend)
-    return window.location.origin;
+    // For production: use deployed Render backend
+    return 'https://gridpulzproduct.onrender.com';
 }
 
 const BACKEND_BASE_URL = getBackendURL();
