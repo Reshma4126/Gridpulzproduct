@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GRIDPULZ | Operator Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="components/top-nav-enhancements.css">
+    <link rel="stylesheet" href="components/font-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Mulish:wght@400;500;600;700&family=Josefin+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neon: '#CCFF00',
+                        alert: '#FF4444',
+                        muted: '#aaaaaa',
+                        dark: {
+                            bg: '#131313',
+                            surface: '#1b1b1b',
+                            border: '#353535'
+                        }
+                    },
+                    fontFamily: {
+                        headline: ['Michroma', 'sans-serif'],
+                        body: ['Josefin Sans', 'sans-serif'],
+                        michroma: ['Michroma', 'sans-serif']
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            from: { opacity: '0', transform: 'translateY(10px)' },
+                            to: { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        pulse_neon: {
+                            '0%,100%': { boxShadow: '0 0 0 0 rgba(204,255,0,0.2)' },
+                            '50%': { boxShadow: '0 0 0 10px rgba(204,255,0,0)' }
+                        }
+                    },
+                    animation: {
+                        fadeIn: 'fadeIn 0.55s ease forwards',
+                        pulse_neon: 'pulse_neon 2.2s ease-in-out infinite'
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            --bg-main: #131313;
+            --bg-surface: #1A1A1A;
+            --bg-elevated: #1b1b1b;
+            --border: #353535;
+            --accent-green: #CCFF00;
+            --accent-red: #FF4444;
+            --text-primary: #FFFFFF;
+            --text-secondary: #aaaaaa;
+        }
+        body { font-family: 'Josefin Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .brand-name, .gp-sidebar__brand, .gp-sidebar__sec-label, .metric-number, .label-kicker, .brand-logo { 
+            font-family: 'Michroma', sans-serif !important; 
+            letter-spacing: -0.02em;
+        }
+        .label-kicker { letter-spacing: 0.22em !important; }
+        body {
+            min-width: 1280px;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(204,255,0,0.06), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(204,255,0,0.03), transparent 24%),
+                var(--bg-main);
+            color: var(--text-primary);
+        }
+        .brand-logo, #m-users, #m-slots, #m-alloc { font-family: 'Michroma', sans-serif !important; }
+        #top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: var(--bg-surface); border-bottom: 1px solid var(--border); z-index: 200; position: sticky; top: 0; flex-shrink: 0; }
+        #page-body { display: flex; flex: 1; min-height: 0; }
+        #main-content { 
+            flex: 1; 
+            padding: 32px 40px; 
+            background: var(--bg-main); 
+            min-height: calc(100vh - 60px); 
+            overflow-y: auto; 
+            margin-left: 68px; 
+            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .gp-sidebar.expanded + #main-content {
+            margin-left: 220px;
+        }
+        @media (max-width: 1024px) {
+            #main-content { margin-left: 0; }
+            .gp-sidebar.expanded + #main-content { margin-left: 0; }
+        }
+        .nav-brand { display: flex; align-items: center; gap: 12px; }
+        .nav-logo { width: 32px; height: 32px; object-fit: contain; }
+        .brand-name { font-family: 'Michroma', sans-serif; color: var(--accent-green); letter-spacing: .18em; font-size: 20px; }
+        .nav-profile { cursor: pointer; }
+        .avatar { width: 36px; height: 36px; border-radius: 9999px; background: rgba(204,255,0,.12); border: 1px solid rgba(204,255,0,.3); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .avatar img { width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; }
+        .profile-wrap { position: relative; }
+        .profile-dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 240px; background: #1e1e1e; border: 1px solid var(--border); border-radius: 12px; padding: 8px; display: none; z-index: 9999; }
+        .profile-dropdown.open { display: block; }
+        .dropdown-header { display: flex; gap: 10px; align-items: center; padding: 8px 12px; }
+        .avatar-lg { width: 36px; height: 36px; border-radius: 9999px; background: rgba(204,255,0,.12); border: 1px solid rgba(204,255,0,.3); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .avatar-lg img { width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; }
+        .dd-name { font-size: 13px; color: #ffffff; margin: 0; font-family: 'Josefin Sans', sans-serif !important; }
+        .dd-email { font-size: 12px; color: #cccccc; margin: 2px 0 0; font-family: 'Josefin Sans', sans-serif !important; }
+        .dd-divider { border: 0; border-top: 1px solid var(--border); margin: 8px 0; }
+        .dd-item { display: block; padding: 9px 12px; border-radius: 8px; color: #dddddd; font-size: 13px; text-decoration: none; font-family: 'Josefin Sans', sans-serif !important; }
+        .dd-item:hover { background: #2a2a2a; color: #ffffff; }
+        .dd-logout { color: #FF4444; width: 100%; text-align: left; background: transparent; border: 0; }
+        .back-btn { margin: 0 16px 16px; padding: 8px 12px; background: #222; border: 1px solid var(--border); color: #cccccc; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: 'Josefin Sans', sans-serif; }
+        .logout-btn { margin-top: auto; margin: auto 16px 16px; padding: 10px; border: 1px solid rgba(255,68,68,0.33); color: #FF6666; border-radius: 8px; background: transparent; cursor: pointer; font-family: 'Josefin Sans', sans-serif; }
+        .nav-links { display: flex; flex-direction: column; gap: 4px; }
+        .nav-links a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #cccccc; border-left: 3px solid transparent; text-decoration: none; font-family: 'Josefin Sans', sans-serif !important; font-size: 14px; }
+        .nav-links a.active { background: rgba(204,255,0,.08); border-left-color: var(--accent-green); color: var(--accent-green); }
+        #top-nav .brand-name, .gp-sidebar__brand { font-family: 'Michroma', sans-serif !important; }
+        .icon-text { display: flex; align-items: center; gap: 6px; }
+        .kpi-row { display: flex; align-items: stretch; gap: 16px; }
+        .kpi-card { padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-surface); display: flex; flex-direction: column; justify-content: center; min-height: 128px; flex: 1; }
+        .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 8px; }
+        .kpi-value { font-family: 'Courier New', 'Consolas', monospace; font-size: clamp(28px, 4vw, 48px); color: var(--text-primary); line-height: 1; font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -0.02em; }
+        .kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+        .accent-neon, [class*='bg-neon'], [class*='border-neon'] { box-shadow: 0 0 12px rgba(204, 255, 0, 0.25); }
+        .grid-overlay {
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 42px 42px;
+            mask-image: radial-gradient(circle at center, black 20%, transparent 88%);
+        }
+        .card-glow:hover { box-shadow: 0 0 0 1px rgba(204,255,0,0.18), 0 0 24px rgba(204,255,0,0.1); }
+        .terminal-panel { background: linear-gradient(180deg, rgba(27,27,27,0.98), rgba(22,22,22,0.98)); border: 1px solid #353535; }
+        .tab-pill { position: relative; transition: all 180ms ease; }
+        .tab-pill::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -1px;
+            width: 0;
+            height: 2px;
+            background: #CCFF00;
+            transform: translateX(-50%);
+            transition: width 180ms ease;
+        }
+        .tab-pill-active::after { width: 100%; }
+        .metric-number { font-size: clamp(1.65rem, 3.5vw, 2.8rem); line-height: 1; font-weight: 800; letter-spacing: -0.05em; font-family: 'Michroma', sans-serif; }
+        .label-kicker { text-transform: uppercase; letter-spacing: 0.22em; font-size: 0.62rem; color: #aaaaaa; }
+        .surface-ink { background: #1b1b1b; }
+        .neon-focus:focus { outline: none; border-color: #CCFF00; box-shadow: 0 0 0 1px rgba(204,255,0,0.35), 0 0 0 4px rgba(204,255,0,0.08); }
+        .profile-menu { opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 160ms ease, transform 160ms ease; }
+        .profile-wrap:hover .profile-menu, .profile-wrap:focus-within .profile-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .animateIn { animation: fadeIn 0.55s ease forwards; }
+        table th, table td { white-space: nowrap; }
+        input[type='range'] { -webkit-appearance: none; appearance: none; background: transparent; }
+        input[type='range']::-webkit-slider-runnable-track { height: 6px; border-radius: 9999px; background: linear-gradient(90deg, rgba(255,68,68,0.7), rgba(255,165,0,0.7), rgba(204,255,0,0.9)); }
+        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 9999px; background: #CCFF00; border: 3px solid #131313; box-shadow: 0 0 12px rgba(204,255,0,0.5); }
+        input[type='range']::-moz-range-track { height: 6px; border-radius: 9999px; background: linear-gradient(90deg, rgba(255,68,68,0.7), rgba(255,165,0,0.7), rgba(204,255,0,0.9)); }
+        input[type='range']::-moz-range-thumb { width: 18px; height: 18px; border-radius: 9999px; background: #CCFF00; border: 3px solid #131313; box-shadow: 0 0 12px rgba(204,255,0,0.5); }
+    </style>
+</head>
+<body class="bg-[#131313] text-white font-sans min-w-[1280px] overflow-x-auto selection:bg-[#CCFF00] selection:text-black">
+    <div class="fixed inset-0 pointer-events-none grid-overlay opacity-40"></div>
+
+    <header id="top-nav">
+        <div class="nav-brand">
+            <img src="assets/gridpulz_logo.png" alt="GridPulz" class="nav-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span class="brand-name">GridPulz</span>
+        </div>
+        <div class="profile-wrap">
+            <div class="nav-profile" id="profileTrigger" onclick="toggleProfileDropdown()">
+                <img src="assets/user.png" alt="Profile" class="avatar">
+            </div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="dropdown-header">
+                    <img src="assets/user.png" alt="Profile" class="avatar-lg">
+                    <div>
+                        <p class="dd-name">Station Operator</p>
+                        <p class="dd-email">sarz@gmail.com</p>
+                    </div>
+                </div>
+                <hr class="dd-divider">
+                <a href="profile.html" class="dd-item">My Profile</a>
+                <a href="settings.html" class="dd-item">Settings</a>
+                <hr class="dd-divider">
+                <button onclick="handleLogout()" class="dd-item dd-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="page-body">
+        <aside class="gp-sidebar" id="main-sidebar">
+            <!-- Logo zone -->
+            <div class="gp-sidebar__logo-zone">
+                <div class="gp-sidebar__logo-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z"/>
+                    </svg>
+                </div>
+                <div class="gp-sidebar__brand">GridPulz</div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="gp-sidebar__nav">
+                <!-- Control Section -->
+                <span class="gp-sidebar__sec-label">Control</span>
+                
+                <button class="gp-sidebar__nav-item" data-page="dashboard">
+                    <span class="gp-sidebar__nav-icon">
+                        <img src="assets/dashboard.png" alt="Dashboard icon">
+                    </span>
+                    <span class="gp-sidebar__nav-label">Dashboard</span>
+                </button>
+
+                <button class="gp-sidebar__nav-item active" data-page="operator-dashboard">
+                    <span class="gp-sidebar__nav-icon">
+                        <img src="assets/operator.png" alt="Operator icon">
+                    </span>
+                    <span class="gp-sidebar__nav-label">Operator</span>
+                </button>
+
+                <button class="gp-sidebar__nav-item" data-page="scheduler">
+                    <span class="gp-sidebar__nav-icon">
+                        <img src="assets/scheduler.png" alt="Scheduler icon">
+                    </span>
+                    <span class="gp-sidebar__nav-label">Scheduler</span>
+                </button>
+
+                <button class="gp-sidebar__nav-item" data-page="alerts">
+                    <span class="gp-sidebar__nav-icon">
+                        <img src="assets/alerts.png" alt="Alerts icon">
+                    </span>
+                    <span class="gp-sidebar__nav-label">Alerts</span>
+                    <span class="gp-sidebar__badge" id="alerts-badge" style="display:none;"></span>
+                </button>
+
+                <!-- Infrastructure Section -->
+                <span class="gp-sidebar__sec-label">Infrastructure</span>
+
+                <button class="gp-sidebar__nav-item" data-page="grid-management">
+                    <span class="gp-sidebar__nav-icon">
+                        <img src="assets/network.png" alt="Grid Management icon">
+                    </span>
+                    <span class="gp-sidebar__nav-label">Grid Management</span>
+                </button>
+
+                <button class="gp-sidebar__nav-item" data-page="systems">
+                    <span class="gp-sidebar__nav-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="3" width="20" height="5"/>
+                            <path d="M6 8v2m6-2v2m6-2v2M2 15h20v2H2zm0 4h20v2H2z"/>
+                        </svg>
+                    </span>
+                    <span class="gp-sidebar__nav-label">Systems</span>
+                </button>
+
+
+            </nav>
+
+            <!-- Separator -->
+            <div class="gp-sidebar__separator"></div>
+
+            <!-- Logout -->
+            <div class="gp-sidebar__logout-zone">
+                <button class="gp-sidebar__nav-item logout" id="logout-btn">
+                    <span class="gp-sidebar__nav-icon">
+                        <img src="assets/logout.png" alt="Logout icon">
+                    </span>
+                    <span class="gp-sidebar__nav-label">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+    <main id="main-content">
+                                <div class="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-neon/5 via-transparent to-transparent pointer-events-none"></div>
+                <div class="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-neon/5 via-transparent to-transparent pointer-events-none"></div>
+
+                <div class="max-w-[1400px] mx-auto py-2 pb-8 space-y-6">
+                    <section class="flex flex-col gap-2 animateIn">
+                        <div class="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-muted">
+                            <span class="w-2 h-2 rounded-full bg-neon"></span>
+                            Operator Control Room
+                        </div>
+                        <div class="flex flex-row items-end justify-between gap-3">
+                            <div>
+                                <h1 class="font-headline text-4xl tracking-tight text-white">Grid Operator Dashboard</h1>
+                                <p class="text-sm text-muted mt-2 max-w-2xl">Live monitoring, intelligent routing, and automated grid safeguards.</p>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="surface-ink border border-[#353535] rounded-sm px-4 py-3 min-w-[160px]">
+                                    <div class="label-kicker mb-1">System State</div>
+                                    <div class="text-sm text-neon font-semibold uppercase tracking-widest">Online / Active</div>
+                                </div>
+                                <div class="surface-ink border border-[#353535] rounded-sm px-4 py-3 min-w-[160px]">
+                                    <div class="label-kicker mb-1">Route Guard</div>
+                                    <div class="text-sm text-white font-semibold uppercase tracking-widest">Monitoring</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="flex flex-wrap gap-3 border-b border-[#353535] pb-1 animateIn">
+                        <button id="tab-btn-queue" class="tab-pill tab-pill-active pb-3 px-4 text-xs font-bold uppercase tracking-[0.24em] text-neon" onclick="switchOpTab(0)">Priority Queue</button>
+                        <button id="tab-btn-routing" class="tab-pill pb-3 px-4 text-xs font-bold uppercase tracking-[0.24em] text-muted hover:text-white" onclick="switchOpTab(1)">Intelligent Routing</button>
+                        <button id="tab-btn-redirect" class="tab-pill pb-3 px-4 text-xs font-bold uppercase tracking-[0.24em] text-muted hover:text-white" onclick="switchOpTab(2)">Auto Redirecting</button>
+                    </section>
+
+                    <section id="tab-content-queue" class="space-y-6 animateIn">
+                        <div class="kpi-row">
+                            <div class="kpi-card card-glow">
+                                <div class="kpi-label">Vehicles Queued</div>
+                                <div id="m-users" class="kpi-value">0</div>
+                            </div>
+                            <div class="kpi-card card-glow">
+                                <div class="kpi-label">Available Slots</div>
+                                <div id="m-slots" class="kpi-value text-[#CCFF00]">0</div>
+                            </div>
+                            <div class="kpi-card card-glow">
+                                <div class="kpi-label">Allocations Made</div>
+                                <div id="m-alloc" class="kpi-value">0</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-6 items-start">
+                            <div class="col-span-4 space-y-6 flex flex-col">
+                                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow">
+                                    <div class="flex items-center gap-3 leading-none mb-4">
+                                        <span class="material-symbols-outlined text-[#CCFF00] text-xl">ev_station</span>
+                                        <h2 class="text-sm uppercase tracking-widest text-[#aaaaaa]">Charging Network</h2>
+                                    </div>
+                                    <div id="stations-list" class="space-y-3"></div>
+                                </div>
+
+                                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow relative overflow-hidden">
+                                    <div class="absolute inset-y-0 right-0 w-44 bg-gradient-to-l from-neon/5 to-transparent pointer-events-none"></div>
+                                    <div class="flex items-center gap-3 leading-none mb-4">
+                                        <span class="material-symbols-outlined text-[#CCFF00] text-xl">add_circle</span>
+                                        <h2 class="text-sm uppercase tracking-widest text-[#aaaaaa]">Add to Queue</h2>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block label-kicker mb-2">Driver Name</label>
+                                            <input type="text" id="v-name" placeholder="Leave empty for auto-name" class="w-full bg-[#131313] border border-[#353535] rounded-sm px-3 py-2.5 text-sm text-white neon-focus">
+                                        </div>
+                                        <div>
+                                            <div class="flex items-end justify-between mb-2">
+                                                <label class="label-kicker">Battery SoC</label>
+                                                <span id="bat-out" class="text-sm font-bold text-neon font-mono">35%</span>
+                                            </div>
+                                            <input type="range" id="v-bat" min="2" max="95" value="35" class="w-full">
+                                        </div>
+                                        <div>
+                                            <label class="block label-kicker mb-2">Nearest Target Station</label>
+                                            <select id="v-station" class="w-full bg-[#131313] border border-[#353535] rounded-sm px-3 py-2.5 text-sm text-white neon-focus appearance-none"></select>
+                                        </div>
+                                        <div>
+                                            <label class="block label-kicker mb-2">Pre-book Time <span class="text-muted/70 normal-case tracking-normal">(optional)</span></label>
+                                            <input type="datetime-local" id="v-prebook" class="w-full bg-[#131313] border border-[#353535] rounded-sm px-3 py-2.5 text-sm text-white neon-focus">
+                                        </div>
+                                        <button id="add-btn" class="w-full bg-neon/10 border border-neon/30 text-neon hover:bg-neon/20 shadow-[0_0_15px_rgba(204,255,0,0.2)] font-bold uppercase tracking-[0.24em] text-[10px] py-3 rounded-sm transition-all flex items-center justify-center gap-2">
+                                            <div class="flex items-center gap-3 leading-none">
+                                                <span class="material-symbols-outlined text-xl">person_add</span>
+                                                <span class="text-sm">Enqueue Vehicle</span>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-span-4 space-y-6 flex flex-col">
+                                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow flex flex-col h-full min-h-[450px]">
+                                    <div class="flex items-center justify-between gap-3 mb-4">
+                                        <div class="flex items-center gap-3 leading-none">
+                                            <span class="material-symbols-outlined text-[#CCFF00] text-xl">reorder</span>
+                                            <h2 class="text-sm uppercase tracking-widest text-[#aaaaaa]">Live Queue</h2>
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button id="run-btn" class="bg-neon text-black font-bold uppercase tracking-[0.22em] text-[10px] px-3 py-2 rounded-sm hover:shadow-[0_0_15px_rgba(204,255,0,0.28)] transition-all flex items-center gap-1">
+                                                <div class="flex items-center gap-3 leading-none">
+                                                    <span class="material-symbols-outlined text-xl">play_arrow</span>
+                                                    <span class="text-sm">Run Target</span>
+                                                </div>
+                                            </button>
+                                            <button id="reset-btn" class="bg-[#131313] hover:bg-[#1d1d1d] border border-[#353535] text-white font-bold uppercase tracking-[0.22em] text-[10px] px-3 py-2 rounded-sm transition-all">Reset</button>
+                                        </div>
+                                    </div>
+                                    <div id="queue-list" class="flex-1 overflow-y-auto pr-2 space-y-2 pb-2">
+                                        <div class="text-center py-10">
+                                            <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">format_list_bulleted</span>
+                                            <div class="text-[10px] uppercase tracking-[0.24em] text-muted">Queue is empty</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-span-4 space-y-6 flex flex-col">
+                                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow min-h-[250px] flex flex-col">
+                                    <div class="flex items-center gap-3 leading-none mb-4">
+                                        <span class="material-symbols-outlined text-[#CCFF00] text-xl">history</span>
+                                        <h2 class="text-sm uppercase tracking-widest text-[#aaaaaa]">Allocation Log</h2>
+                                    </div>
+                                    <div id="decision-log" class="flex-1 overflow-y-auto space-y-2">
+                                        <div class="text-center py-8">
+                                            <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">receipt_long</span>
+                                            <div class="text-[10px] uppercase tracking-[0.24em] text-muted">Waiting for allocation...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="tab-content-routing" class="hidden space-y-5 animateIn">
+                        <div class="flex items-center gap-3 pb-4 border-b border-[#353535]">
+                            <span class="bg-neon/10 text-neon text-[9px] font-bold px-3 py-1 rounded-sm border border-neon/20 uppercase tracking-[0.24em]">Module 02</span>
+                            <h2 class="font-['Michroma'] text-lg text-white tracking-tight">Intelligent Routing</h2>
+                            <span class="ml-auto text-[10px] text-muted uppercase tracking-[0.24em]">Haversine + SoC Weights</span>
+                        </div>
+
+                        <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow">
+                            <div class="text-[8px] uppercase tracking-[0.28em] text-muted mb-4">Live Routing Demo - Adjust Battery to See Weights Shift</div>
+
+                            <div class="grid grid-cols-2 gap-4 mb-5">
+                                <div class="surface-ink border border-[#353535] rounded-sm p-4">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <div class="label-kicker">Battery SoC</div>
+                                        <strong class="text-neon font-mono text-sm" id="soc-val">35%</strong>
+                                    </div>
+                                    <input type="range" id="soc-slider" min="2" max="95" value="35" step="1" class="w-full" oninput="updateRouting()">
+                                </div>
+                                <div class="surface-ink border border-[#353535] rounded-sm p-4">
+                                    <div class="label-kicker mb-2">Routing Mode</div>
+                                    <select id="route-mode" onchange="updateRouting()" class="w-full bg-[#131313] border border-[#353535] rounded-sm px-3 py-2.5 text-xs text-white neon-focus uppercase tracking-[0.18em]">
+                                        <option value="auto">Auto (SoC-adaptive)</option>
+                                        <option value="emergency">Emergency (&lt;15% override)</option>
+                                        <option value="eco">Eco (grid-first)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-3 mb-5">
+                                <div class="surface-ink border border-[#353535] rounded-sm p-4">
+                                    <div class="text-2xl font-bold text-white font-mono" id="w-dist">0.55</div>
+                                    <div class="label-kicker mt-1">W1 - Distance</div>
+                                </div>
+                                <div class="surface-ink border border-[#353535] rounded-sm p-4">
+                                    <div class="text-2xl font-bold text-white font-mono" id="w-grid">0.30</div>
+                                    <div class="label-kicker mt-1">W2 - Grid Risk</div>
+                                </div>
+                                <div class="surface-ink border border-[#353535] rounded-sm p-4">
+                                    <div class="text-2xl font-bold text-white font-mono" id="w-wait">0.15</div>
+                                    <div class="label-kicker mt-1">W3 - Wait Time</div>
+                                </div>
+                            </div>
+
+                            <div id="soc-alert" style="display:none" class="mb-4"></div>
+
+                            <div class="label-kicker mb-3">Ranked Stations - Lowest Score = Best Route</div>
+                            <div id="routing-table" class="surface-ink border border-[#353535] rounded-sm overflow-hidden"></div>
+                        </div>
+                    </section>
+
+                    <section id="tab-content-redirect" class="hidden space-y-5 animateIn">
+                        <div class="flex items-center gap-3 pb-4 border-b border-[#353535]">
+                            <span class="bg-alert/10 text-alert text-[9px] font-bold px-3 py-1 rounded-sm border border-alert/20 uppercase tracking-[0.24em]">Module 03</span>
+                            <h2 class="font-['Michroma'] text-lg text-white tracking-tight">Automated Redirecting</h2>
+                            <span class="ml-auto text-[10px] text-muted uppercase tracking-[0.24em]">Grid Safeguard + XGBoost</span>
+                        </div>
+
+                        <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow">
+                            <div class="text-[8px] uppercase tracking-[0.28em] text-muted mb-4">Trigger Simulator - Fire Any Conflict Condition</div>
+
+                            <div class="flex flex-wrap gap-2 mb-5">
+                                <button class="trigger-btn text-[10px] font-bold uppercase tracking-[0.22em] px-3 py-2 rounded-sm border border-[#353535] bg-[#131313] text-white/70 hover:text-white hover:border-neon/30 transition-all" id="t0" onclick="fireTrigger(0)">
+                                    <div class="flex items-center gap-3 leading-none">
+                                        <span class="material-symbols-outlined text-xl">psychology</span>
+                                        <span class="text-sm">ML: High-Risk Surge</span>
+                                    </div>
+                                </button>
+                                <button class="trigger-btn text-[10px] font-bold uppercase tracking-[0.22em] px-3 py-2 rounded-sm border border-[#353535] bg-[#131313] text-white/70 hover:text-white hover:border-neon/30 transition-all" id="t1" onclick="fireTrigger(1)">
+                                    <div class="flex items-center gap-3 leading-none">
+                                        <span class="material-symbols-outlined text-xl">ev_station</span>
+                                        <span class="text-sm">Slots Drop to 0</span>
+                                    </div>
+                                </button>
+                                <button class="trigger-btn text-[10px] font-bold uppercase tracking-[0.22em] px-3 py-2 rounded-sm border border-[#353535] bg-[#131313] text-white/70 hover:text-white hover:border-neon/30 transition-all" id="t2" onclick="fireTrigger(2)">
+                                    <div class="flex items-center gap-3 leading-none">
+                                        <span class="material-symbols-outlined text-xl">swap_vert</span>
+                                        <span class="text-sm">Priority Conflict (5% vs 60%)</span>
+                                    </div>
+                                </button>
+                                <button onclick="resetTriggers()" class="ml-auto text-[10px] font-bold uppercase tracking-[0.22em] px-3 py-2 rounded-sm border border-[#353535] bg-[#131313] text-muted hover:text-neon hover:border-neon/30 transition-all">Reset</button>
+                            </div>
+
+                            <div id="alert-area" class="mb-5">
+                                <div class="rounded-sm p-4 border border-neon/20 bg-neon/5">
+                                    <div class="text-xs font-bold text-neon mb-1">System Nominal - Station Alpha Confirmed</div>
+                                    <div class="text-[10px] text-muted">2/4 slots available · grid load 42% · no ML risk flags · no conflicts detected</div>
+                                </div>
+                            </div>
+
+                            <div class="label-kicker mb-3">Live Token Transfer</div>
+
+                            <div class="surface-ink border border-[#353535] rounded-sm p-4">
+                                <div class="flex items-center gap-3 py-3 border-b border-[#353535]">
+                                    <div class="w-3 h-3 rounded-full bg-emerald-500 shrink-0 transition-colors duration-500" id="alpha-dot"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-sm font-bold text-white">Station Alpha</span>
+                                            <span class="bg-emerald-500/15 text-emerald-400 text-[8px] font-bold px-2 py-0.5 rounded-sm border border-emerald-500/20 uppercase" id="alpha-status">Active</span>
+                                        </div>
+                                        <div class="text-[10px] text-muted mt-1">Current target · 0.4 km · DC fast · grid 42%</div>
+                                    </div>
+                                    <div class="bg-blue-500/15 text-blue-400 text-[9px] font-bold px-3 py-1 rounded-sm border border-blue-500/20 transition-opacity duration-500 token-pill" id="token-alpha">⚡ Priority Token</div>
+                                </div>
+
+                                <div class="text-center py-2 text-lg text-muted transition-colors duration-500 font-mono" id="redirect-arrow">│</div>
+
+                                <div class="flex items-center gap-3 py-3 opacity-30 transition-opacity duration-500" id="beta-row">
+                                    <div class="w-3 h-3 rounded-full bg-white/20 shrink-0 transition-colors duration-500" id="beta-dot"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="text-sm font-bold text-white">Station Beta</span>
+                                            <span class="bg-blue-500/15 text-blue-400 text-[8px] font-bold px-2 py-0.5 rounded-sm border border-blue-500/20 uppercase" id="beta-status">Standby</span>
+                                        </div>
+                                        <div class="text-[10px] text-muted mt-1">Alternative · 1.2 km · DC fast · grid 38% · 2/3 free</div>
+                                    </div>
+                                    <div class="bg-blue-500/15 text-blue-400 text-[9px] font-bold px-3 py-1 rounded-sm border border-blue-500/20 opacity-0 transition-opacity duration-600 token-pill" id="token-beta">⚡ Priority Token</div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <div class="text-[9px] uppercase tracking-[0.24em] text-muted mb-1">Route Recalculation Progress</div>
+                                    <div class="h-1 bg-[#353535] rounded-full overflow-hidden">
+                                        <div class="progress-fill h-1 rounded-full bg-neon" id="reroute-bar" style="width:0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <footer class="pb-4 text-center">
+                        <span class="text-[10px] uppercase tracking-[0.24em] text-muted">GridPulz Smart Traffic Controller - All Modules · Production Ready</span>
+                    </footer>
+                </div>
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/logout.js"></script>
+    <script>
+
+    function updateClock() {
+        const el = document.getElementById('live-clock');
+        const sidebarClock = document.getElementById('sidebar-clock');
+        const value = new Date().toLocaleTimeString('en-IN', { hour12: false });
+        if (el) el.textContent = value;
+        if (sidebarClock) sidebarClock.textContent = value;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    function switchOpTab(index) {
+        const tabs = [
+            { btn: 'tab-btn-queue',    content: 'tab-content-queue' },
+            { btn: 'tab-btn-routing',  content: 'tab-content-routing' },
+            { btn: 'tab-btn-redirect', content: 'tab-content-redirect' }
+        ];
+
+        tabs.forEach((t, i) => {
+            const btn = document.getElementById(t.btn);
+            const content = document.getElementById(t.content);
+            if (!btn || !content) return;
+
+            if (i === index) {
+                btn.classList.remove('text-muted');
+                btn.classList.add('text-neon', 'tab-pill-active');
+                content.classList.remove('hidden');
+            } else {
+                btn.classList.remove('text-neon', 'tab-pill-active');
+                btn.classList.add('text-muted');
+                content.classList.add('hidden');
+            }
+        });
+    }
+
+const ROUTING_STATIONS = [
+    { name: 'Alpha', dist: 0.4, grid: 42, wait: 2, type: 'DC', free: 3, total: 4 },
+    { name: 'Beta',  dist: 1.2, grid: 38, wait: 0, type: 'DC', free: 2, total: 3 },
+    { name: 'Gamma', dist: 2.1, grid: 71, wait: 5, type: 'AC', free: 1, total: 4 },
+    { name: 'Delta', dist: 3.5, grid: 22, wait: 1, type: 'DC', free: 3, total: 4 }
+];
+
+function getWeights(soc, mode) {
+    if (mode === 'emergency' || soc < 15) return { d: 0.80, g: 0.10, w: 0.10 };
+    if (mode === 'eco')                   return { d: 0.20, g: 0.60, w: 0.20 };
+    if (soc < 40)                         return { d: 0.55, g: 0.30, w: 0.15 };
+    return                                       { d: 0.35, g: 0.40, w: 0.25 };
+}
+
+function updateRouting() {
+    const soc  = +document.getElementById('soc-slider').value;
+    const mode = document.getElementById('route-mode').value;
+
+    document.getElementById('soc-val').textContent = soc + '%';
+
+    const w = getWeights(soc, mode);
+    document.getElementById('w-dist').textContent = w.d.toFixed(2);
+    document.getElementById('w-grid').textContent = w.g.toFixed(2);
+    document.getElementById('w-wait').textContent = w.w.toFixed(2);
+
+    const scored = ROUTING_STATIONS.map(s => {
+        const score = +(s.dist * w.d + (s.grid / 10) * w.g + (s.wait / 10) * w.w).toFixed(3);
+        return { ...s, score };
+    }).sort((a, b) => a.score - b.score);
+
+    const maxScore = Math.max(...scored.map(s => s.score));
+    const tbl = document.getElementById('routing-table');
+    if (!tbl) return;
+
+    tbl.innerHTML = scored.map((s, i) => {
+        const barW = Math.round((1 - s.score / maxScore) * 100);
+        const gc = s.grid > 75 ? '#ef4444' : s.grid > 55 ? '#f59e0b' : '#10b981';
+        const best = i === 0 ? '<span class="bg-neon/10 text-neon text-[8px] font-bold px-2 py-0.5 rounded-sm border border-neon/20 ml-2">BEST ROUTE</span>' : '';
+        return `<div class="px-4 py-3 border-b border-[#353535] last:border-b-0">
+            <div class="flex items-center justify-between gap-4 mb-1.5">
+                <span class="text-sm font-bold text-white">${s.name}
+                    <span class="text-[10px] font-normal text-muted ml-1">${s.type}</span>${best}
+                </span>
+                <span class="text-[10px] font-mono text-muted text-right">
+                    score ${s.score} · ${s.dist}km · <span style="color:${gc}">${s.grid}%</span> · ${s.free}/${s.total} free
+                </span>
+            </div>
+            <div class="h-1.5 bg-[#353535] rounded-full overflow-hidden">
+                <div class="score-bar-fill h-1.5 rounded-full" style="width:${barW}%;background:${i === 0 ? '#CCFF00' : 'rgba(255,255,255,0.08)'}"></div>
+            </div>
+        </div>`;
+    }).join('');
+
+    const alertEl = document.getElementById('soc-alert');
+    if (alertEl) {
+        if (soc < 15 || mode === 'emergency') {
+            alertEl.style.display = 'block';
+            alertEl.innerHTML = `<div class="rounded-sm p-4 border border-alert/20 bg-alert/5 animate-pulse">
+                <div class="text-xs font-bold text-alert mb-1">⚠ Emergency Routing Active — Critical SoC</div>
+                <div class="text-[10px] text-muted">Distance weight set to 0.80. Routing strictly to closest station regardless of grid load.</div>
+            </div>`;
+        } else {
+            alertEl.style.display = 'none';
+        }
+    }
+}
+updateRouting();
+
+const TRIGGERS = [
+    { msg: 'XGBoost predicts grid surge at Station Alpha within 4 minutes.', sub: 'Confidence: 94% · Proactive redirect — user has not yet arrived.', cls: 'red' },
+    { msg: 'Station Alpha at 0/4 slots — booking could not be secured.', sub: 'All slots taken. Redirecting to next station with 2+ free slots.', cls: 'red' },
+    { msg: 'Priority conflict: Vehicle with 5% SoC claimed your slot.', sub: 'Your priority token transferred to Station Beta. You are #1 in queue.', cls: 'amber' }
+];
+
+let fired = new Set();
+
+function fireTrigger(i) {
+    if (fired.has(i)) return;
+    fired.add(i);
+
+    const t = TRIGGERS[i];
+    const btn = document.getElementById('t' + i);
+    if (btn) btn.classList.add('fired');
+
+    const borderColor = t.cls === 'red' ? 'border-alert/20' : 'border-amber-500/20';
+    const bgColor = t.cls === 'red' ? 'bg-alert/5' : 'bg-amber-500/5';
+    const textColor = t.cls === 'red' ? 'text-alert' : 'text-amber-400';
+
+    const area = document.getElementById('alert-area');
+    if (area) {
+        area.innerHTML = `<div class="rounded-sm p-4 border ${borderColor} ${bgColor}">
+            <div class="text-xs font-bold ${textColor} mb-1">${t.msg}</div>
+            <div class="text-[10px] text-muted">${t.sub}</div>
+        </div>`;
+    }
+
+    if (i >= 1) {
+        const alphaDot = document.getElementById('alpha-dot');
+        const alphaStatus = document.getElementById('alpha-status');
+        const betaRow = document.getElementById('beta-row');
+        const betaDot = document.getElementById('beta-dot');
+        const betaStatus = document.getElementById('beta-status');
+        const tokenAlpha = document.getElementById('token-alpha');
+        const tokenBeta = document.getElementById('token-beta');
+        const arrow = document.getElementById('redirect-arrow');
+        const bar = document.getElementById('reroute-bar');
+
+        if (alphaDot) alphaDot.style.background = '#ef4444';
+        if (alphaStatus) { alphaStatus.className = 'bg-alert/15 text-alert text-[8px] font-bold px-2 py-0.5 rounded-sm border border-alert/20 uppercase'; alphaStatus.textContent = 'Overloaded'; }
+        if (arrow) { arrow.textContent = '↓ redirecting...'; arrow.style.color = '#ef4444'; }
+        if (betaRow) betaRow.style.opacity = '1';
+        if (betaDot) betaDot.style.background = '#10b981';
+        if (betaStatus) { betaStatus.className = 'bg-emerald-500/15 text-emerald-400 text-[8px] font-bold px-2 py-0.5 rounded-sm border border-emerald-500/20 uppercase'; betaStatus.textContent = 'Assigned'; }
+        if (tokenAlpha) tokenAlpha.style.opacity = '0';
+        setTimeout(() => { if (tokenBeta) tokenBeta.style.opacity = '1'; }, 600);
+
+        let pct = 0;
+        const iv = setInterval(() => {
+            pct += 3;
+            if (bar) bar.style.width = Math.min(pct, 100) + '%';
+            if (pct >= 100) clearInterval(iv);
+        }, 50);
+    }
+}
+
+function resetTriggers() {
+    fired.clear();
+    ['t0','t1','t2'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('fired');
+    });
+
+    document.getElementById('alert-area').innerHTML = `<div class="rounded-sm p-4 border border-neon/20 bg-neon/5">
+        <div class="text-xs font-bold text-neon mb-1">System Nominal — Station Alpha Confirmed</div>
+        <div class="text-[10px] text-muted">2/4 slots available · grid load 42% · no ML risk flags · no conflicts detected</div>
+    </div>`;
+
+    const alphaDot = document.getElementById('alpha-dot');
+    const alphaStatus = document.getElementById('alpha-status');
+    const betaRow = document.getElementById('beta-row');
+    const betaDot = document.getElementById('beta-dot');
+    const betaStatus = document.getElementById('beta-status');
+    const tokenAlpha = document.getElementById('token-alpha');
+    const tokenBeta = document.getElementById('token-beta');
+    const arrow = document.getElementById('redirect-arrow');
+    const bar = document.getElementById('reroute-bar');
+
+    if (alphaDot) alphaDot.style.background = '#10b981';
+    if (alphaStatus) { alphaStatus.className = 'bg-emerald-500/15 text-emerald-400 text-[8px] font-bold px-2 py-0.5 rounded-sm border border-emerald-500/20 uppercase'; alphaStatus.textContent = 'Active'; }
+    if (betaRow) betaRow.style.opacity = '0.3';
+    if (betaDot) betaDot.style.background = 'rgba(255,255,255,0.2)';
+    if (betaStatus) { betaStatus.className = 'bg-blue-500/15 text-blue-400 text-[8px] font-bold px-2 py-0.5 rounded-sm border border-blue-500/20 uppercase'; betaStatus.textContent = 'Standby'; }
+    if (tokenAlpha) tokenAlpha.style.opacity = '1';
+    if (tokenBeta) tokenBeta.style.opacity = '0';
+    if (arrow) { arrow.textContent = '│'; arrow.style.color = ''; }
+    if (bar) bar.style.width = '0%';
+}
+
+let OP_STATIONS = [
+    { name: "Loading...", maxSlots: 0, gridLoad: 0 }
+];
+
+async function loadOperatorStation() {
+    const email = localStorage.getItem('gridpulz_operator_email');
+    if (!email || !window.supabaseClient) return;
+
+    try {
+        const { data: station, error } = await window.supabaseClient
+            .from('stations')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error) throw error;
+
+        if (station) {
+            OP_STATIONS = [{
+                id: station.id,
+                name: station.name,
+                maxSlots: station.num_plugs || 8,
+                gridLoad: station.grid_load || 0,
+                address: station.address,
+                capacity: station.total_capacity_kw
+            }];
+            
+            // Update UI elements if they exist
+            const titleEl = document.querySelector('.brand-name');
+            if (titleEl) titleEl.textContent = station.name;
+            
+            renderOperatorPriorityQueue();
+        }
+    } catch (err) {
+        console.error('Failed to load operator station:', err);
+    }
+}
+
+// Initialize loading
+loadOperatorStation();
+
+const OP_BUFFER_WINDOW_MINS = 15;
+const OP_QUEUE_SYNC_CHANNEL = 'gridpulz-queue-sync';
+let opQueueChannel = null;
+
+function getLocalQueue() {
+    try {
+        return JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
+    } catch (error) {
+        return [];
+    }
+}
+
+function setLocalQueue(queue) {
+    try {
+        localStorage.setItem('gridpulz_queue', JSON.stringify(queue));
+    } catch (error) {}
+}
+
+function applyQueueEvent(event) {
+    if (!event || !event.action) return;
+    let queue = getLocalQueue();
+
+    if (event.action === 'upsert' && event.payload) {
+        const incoming = event.payload;
+        // Filter: only accept if it's for THIS station
+        const myStation = OP_STATIONS[0];
+        if (incoming.station_id && myStation.id && String(incoming.station_id) !== String(myStation.id)) return;
+        if (!incoming.station_id && myStation.name && incoming.station_name !== myStation.name) return;
+
+        const idx = queue.findIndex((item) => String(item.id) === String(incoming.id));
+        if (idx >= 0) queue[idx] = { ...queue[idx], ...incoming };
+        else queue.push(incoming);
+        setLocalQueue(queue);
+        return;
+    }
+
+    if (event.action === 'remove' && event.payload && event.payload.id != null) {
+        queue = queue.filter((item) => String(item.id) !== String(event.payload.id));
+        setLocalQueue(queue);
+        return;
+    }
+
+    if (event.action === 'replace' && event.payload && Array.isArray(event.payload.queue)) {
+        setLocalQueue(event.payload.queue);
+    }
+}
+
+function initOperatorQueueSync() {
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'gridpulz_queue') {
+            renderOperatorPriorityQueue();
+            return;
+        }
+        if (event.key === 'gridpulz_queue_sync_ping' && event.newValue) {
+            try {
+                const syncEvent = JSON.parse(event.newValue);
+                applyQueueEvent(syncEvent);
+                renderOperatorPriorityQueue();
+            } catch (error) {}
+        }
+    });
+
+    if (!window.supabaseClient) return;
+
+    try {
+        opQueueChannel = window.supabaseClient
+            .channel(OP_QUEUE_SYNC_CHANNEL)
+            .on('broadcast', { event: 'queue_event' }, ({ payload }) => {
+                applyQueueEvent(payload);
+                renderOperatorPriorityQueue();
+            })
+            .subscribe();
+    } catch (error) {
+        console.warn('Operator queue realtime subscription failed:', error);
+    }
+}
+
+function opTemporalState(v) {
+    if (!v.booked_time) return 'charge_now';
+    const bookedMs = new Date(v.booked_time).getTime();
+    if (!Number.isFinite(bookedMs)) return 'charge_now';
+    const diffMins = (bookedMs - Date.now()) / 60000;
+    if (diffMins > OP_BUFFER_WINDOW_MINS) return 'upcoming';
+    if (diffMins >= 0) return 'activating';
+    return 'active';
+}
+
+function opCalcScore(v) {
+    const stationIdx = Number.isFinite(v.stationIdx) ? v.stationIdx : 0;
+    const station = OP_STATIONS[stationIdx] || OP_STATIONS[0];
+    const battery = Number(v.battery || 0);
+    const waitMins = Number(v.waitMins || 0);
+
+    let score = (100 - battery) * 0.60 + waitMins * 0.30 - station.gridLoad * 0.10;
+
+    const state = opTemporalState(v);
+    if (state === 'upcoming') return 0;
+    if (state === 'activating' && v.booked_time) {
+        const diffMins = (new Date(v.booked_time).getTime() - Date.now()) / 60000;
+        score += (OP_BUFFER_WINDOW_MINS - diffMins) * 10;
+    }
+    return +score.toFixed(1);
+}
+
+function opGetBadge(v) {
+    const state = opTemporalState(v);
+    if (state === 'upcoming') return '<span class="text-[8px] uppercase tracking-widest text-white/40">Upcoming</span>';
+    if (state === 'activating') return '<span class="text-[8px] uppercase tracking-widest text-neon">Activating</span>';
+    if (state === 'active') return '<span class="text-[8px] uppercase tracking-widest text-emerald-400">Active</span>';
+    return '<span class="text-[8px] uppercase tracking-widest text-white/40">Charge Now</span>';
+}
+
+function renderOperatorPriorityQueue() {
+    const queueList = document.getElementById('queue-list');
+    const usersEl = document.getElementById('m-users');
+    const slotsEl = document.getElementById('m-slots');
+
+    if (!queueList) return;
+
+    let queue = [];
+    try {
+        queue = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
+    } catch (error) {
+        queue = [];
+    }
+
+    const enriched = queue.map((v) => {
+        const fallbackWait = v.timestamp ? Math.max(0, Math.round((Date.now() - Number(v.timestamp)) / 60000)) : 0;
+        return {
+            ...v,
+            waitMins: Number.isFinite(v.waitMins) ? v.waitMins : fallbackWait
+        };
+    });
+
+    const myStation = OP_STATIONS[0];
+    const myQueue = enriched.filter(v => {
+        if (v.station_id && myStation.id) return String(v.station_id) === String(myStation.id);
+        if (v.station_name && myStation.name) return v.station_name === myStation.name;
+        return true; // fallback
+    });
+
+    const sorted = [...myQueue].sort((a, b) => opCalcScore(b) - opCalcScore(a));
+
+    if (usersEl) usersEl.textContent = String(sorted.length);
+
+    const activeCount = sorted.filter((v) => opTemporalState(v) !== 'upcoming').length;
+    const totalSlots = OP_STATIONS.reduce((sum, st) => sum + st.maxSlots, 0);
+    if (slotsEl) slotsEl.textContent = String(Math.max(0, totalSlots - activeCount));
+
+    if (sorted.length === 0) {
+        queueList.innerHTML = `
+            <div class="text-center py-10">
+                <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">format_list_bulleted</span>
+                <div class="text-[10px] uppercase tracking-[0.24em] text-muted">Queue is empty</div>
+            </div>`;
+        return;
+    }
+
+    queueList.innerHTML = sorted.map((v, index) => {
+        const stationIdx = Number.isFinite(v.stationIdx) ? v.stationIdx : 0;
+        const station = OP_STATIONS[stationIdx] || OP_STATIONS[0];
+        const score = opCalcScore(v);
+        const name = String(v.name || 'Driver');
+        const battery = Number(v.battery || 0);
+        const bookingText = v.booked_time
+            ? ` • Booked ${new Date(v.booked_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+            : '';
+
+        return `
+            <div class="bg-white/[0.03] border border-white/5 p-3 rounded-lg flex items-center gap-3 ${index === 0 ? 'ring-1 ring-neon/40' : ''}">
+                <div class="w-7 h-7 rounded-full bg-neon/15 border border-neon/30 text-neon flex items-center justify-center text-[10px] font-bold">#${index + 1}</div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-bold text-xs text-white truncate">${name}</div>
+                    <div class="text-[9px] text-white/50 uppercase tracking-widest truncate mt-0.5">${battery}% SoC • Wait ${v.waitMins}m • ${station.name}${bookingText}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-mono text-white">${score}</div>
+                    ${opGetBadge(v)}
+                </div>
+            </div>`;
+    }).join('');
+}
+
+initOperatorQueueSync();
+renderOperatorPriorityQueue();
+setInterval(renderOperatorPriorityQueue, 15000);
+    </script>
+    <script src="components/sidebar.js"></script>
+    <script src="components/top-nav-enhancements.js"></script>
+</body>
+</html>
+
+
+
+

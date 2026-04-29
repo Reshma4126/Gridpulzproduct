@@ -1,0 +1,53 @@
+/* GridPulz Font System */
+body, 
+.font-body {
+  font-family: 'Josefin Sans', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6, 
+.font-headline, 
+.font-michroma, 
+.brand-name, 
+.gp-sidebar__brand, 
+.metric-number {
+  font-family: 'Michroma', sans-serif !important;
+}
+
+/* Material Symbols exception */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+}
+
+/* Brighter global text visibility */
+:root {
+  --text-primary: #ffffff;
+  --text-secondary: #d4d4d4;
+}
+
+.text-muted,
+.text-on-surface-variant,
+.text-on-surface-variant\/60,
+.text-on-surface-variant\/70,
+.text-on-surface-variant\/50,
+.text-on-surface-variant\/40 {
+  color: #d7d7d7 !important;
+}
+
+p,
+span,
+small,
+label,
+li,
+a,
+button,
+input,
+select,
+textarea {
+  color: inherit;
+}
+
+/* Keep neon readable but brighter */
+.text-neon,
+[class*='text-neon'] {
+  color: #d9ff63 !important;
+}

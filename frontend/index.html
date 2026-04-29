@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GRIDPULZ | Powering Intelligent EV Charging</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {"on-error": "#690005","surface-variant": "#35343a","on-tertiary-fixed": "#0f1d2a","on-surface-variant": "#c3caac","on-primary": "#263500","on-primary-fixed-variant": "#384e00","surface-dim": "#131318","surface-container-highest": "#35343a","surface-bright": "#39383e","primary-fixed-dim": "#a1d800","error-container": "#93000a","primary-fixed": "#b8f600","primary": "#ffffff","on-tertiary": "#243240","tertiary-fixed": "#d6e4f7","secondary-fixed-dim": "#00e29e","secondary": "#6cffbf","on-background": "#e4e1e9","secondary-fixed": "#47ffb8","on-surface": "#e4e1e9","on-secondary-fixed-variant": "#005236","outline": "#8d9479","on-primary-container": "#506e00","background": "#131318","error": "#ffb4ab","tertiary": "#ffffff","surface": "#131318","inverse-surface": "#e4e1e9","inverse-on-surface": "#303036","surface-container-high": "#2a292f","on-secondary-fixed": "#002114","tertiary-fixed-dim": "#bac8da","surface-tint": "#a1d800","on-tertiary-container": "#586676","on-secondary": "#003824","on-tertiary-fixed-variant": "#3b4857","on-error-container": "#ffdad6","surface-container-lowest": "#0e0e13","primary-container": "#b8f600","outline-variant": "#434933","on-primary-fixed": "#141f00","surface-container-low": "#1b1b20","secondary-container": "#00e5a0","on-secondary-container": "#006141","tertiary-container": "#d6e4f7","surface-container": "#1f1f25","inverse-primary": "#4b6700"},
+                    fontFamily: {
+                        "headline": ["Michroma", "sans-serif"],
+                        "body": ["Josefin Sans", "sans-serif"],
+                        "label": ["Josefin Sans", "sans-serif"],
+                        "michroma": ["Michroma", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem","lg": "0.25rem","xl": "0.5rem","full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Josefin Sans', sans-serif; background-color: #0A0A0F; color: #e4e1e9; }
+        .font-headline, .font-michroma, .brand-name, h1, h2, h3, h4, h5, h6 { font-family: 'Michroma', sans-serif !important; }
+        html { scroll-behavior: smooth; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(31, 31, 37, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(184, 246, 0, 0.15);
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(184, 246, 0, 0.1) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .perspective-mockup {
+            transform: perspective(1000px) rotateX(5deg) rotateY(-15deg) rotateZ(2deg);
+        }
+        .circuit-bg {
+            background-color: #0d0d12;
+            background-image:
+                radial-gradient(circle at 2px 2px, rgba(191, 255, 0, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        .challenge-card {
+            background: rgba(26, 26, 37, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(191, 255, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .challenge-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(191, 255, 0, 0.4);
+            box-shadow: 0 10px 30px -10px rgba(191, 255, 0, 0.2);
+        }
+        .feature-card {
+            background: rgba(26, 26, 37, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: #BFFF00;
+            box-shadow: 0 10px 30px -5px rgba(191, 255, 0, 0.15);
+        }
+        .michroma-heading {
+            font-family: 'Michroma', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+
+        /* Scroll reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-60px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-left.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(60px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-right.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-scale.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .stagger-1 { transition-delay: 0.1s; }
+        .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; }
+        .stagger-4 { transition-delay: 0.4s; }
+
+        /* Navbar scroll state */
+        nav.scrolled {
+            background: rgba(19, 19, 24, 0.92) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 1px 0 rgba(191, 255, 0, 0.08);
+        }
+
+        /* Hero text entrance */
+        .hero-text-line {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: heroReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .hero-text-line:nth-child(1) { animation-delay: 0.2s; }
+        .hero-text-line:nth-child(2) { animation-delay: 0.4s; }
+        .hero-text-line:nth-child(3) { animation-delay: 0.6s; }
+        @keyframes heroReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero-fade {
+            opacity: 0;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Floating badge pulse */
+        .float-badge {
+            animation: floatBadge 4s ease-in-out infinite;
+        }
+        @keyframes floatBadge {
+            0%, 100% { transform: translate(-50%, 0); }
+            50% { transform: translate(-50%, -8px); }
+        }
+
+        /* Continuous Float Element */
+        .animate-float {
+            animation: continuousFloat 6s ease-in-out infinite;
+        }
+        @keyframes continuousFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Active nav link */
+        .nav-link {
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #BFFF00;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        /* Pulse glow for CTA */
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(191, 255, 0, 0.15); }
+        }
+    </style>
+</head>
+<body class="bg-[#0A0A0F] text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed dot-grid min-w-[1440px] overflow-x-auto">
+
+    <!-- 1. NAVBAR -->
+    <nav id="navbar" class="bg-[#131318]/80 backdrop-blur-md top-0 sticky z-50 transition-all duration-300">
+        <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+            <div class="flex items-center">
+                <img alt="GridPulz Logo" class="h-32 w-auto mix-blend-lighten" src="assets/gridpulz_logo.png"/>
+            </div>
+            <div class="flex items-center gap-10">
+                <a class="nav-link active font-body text-sm uppercase tracking-widest text-[#BFFF00] font-bold" href="#hero">Home</a>
+                <a class="nav-link font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#FFFFFF] transition-colors" href="about.html">About</a>
+                <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#FFFFFF] transition-colors" href="features.html">Features</a>
+            </div>
+            <a href="login.html" onclick="handleGetStarted(event)" class="bg-primary-container text-on-primary-fixed font-headline font-bold px-6 py-2 rounded-lg active:scale-90 transition-all hover:bg-[#BFFF00]/90 hover:shadow-[0_0_15px_rgba(191,255,0,0.3)]">
+                GET STARTED
+            </a>
+        </div>
+    </nav>
+
+    <!-- 2. HERO SECTION -->
+    <section id="hero" class="relative min-h-[85vh] flex items-center bg-[#0A0A0F] overflow-hidden">
+        <!-- Right-side car image (positioned absolutely on the right half) -->
+        <div class="absolute top-0 right-0 w-[55%] h-full z-0 block">
+            <img alt="EV Charging Background" class="w-full h-full object-cover object-center" src="assets/ev_hero_bg.png"/>
+            <!-- Fade from dark left edge into the image -->
+            <div class="absolute inset-0 bg-gradient-to-r from-[#0A0A0F] via-[#0A0A0F]/40 to-transparent"></div>
+            <!-- Subtle green glow on the image -->
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_50%,rgba(191,255,0,0.06)_0%,transparent_70%)] pointer-events-none"></div>
+            <!-- Top/bottom fade -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] via-transparent to-[#0A0A0F]/50 pointer-events-none"></div>
+        </div>
+
+        <!-- Mobile: show car image as background on full width -->
+        <div class="absolute inset-0 z-0 hidden">
+            <img alt="EV Charging Background" class="w-full h-full object-cover object-center" src="assets/ev_hero_bg.png"/>
+            <div class="absolute inset-0 bg-[#0A0A0F]/75"></div>
+        </div>
+
+        <div class="relative z-10 w-full px-8 max-w-[1440px] mx-auto">
+            <div class="max-w-xl py-4">
+                <h1 class="tracking-tighter leading-[1.05] uppercase mb-4">
+                    <span class="hero-text-line text-2xl text-[32px] font-headline font-light italic lowercase block mb-2 text-white">powering</span>
+                    <span class="hero-text-line text-5xl text-[65px] text-[75px] michroma-heading text-[#BFFF00] block leading-none mb-2 mt-4">INTELLIGENT</span>
+                    <span class="hero-text-line text-4xl text-[60px] text-[70px] michroma-heading text-white block leading-none whitespace-nowrap">EV CHARGING.</span>
+                </h1>
+                <p class="hero-fade text-on-surface-variant text-xl font-light leading-relaxed mb-8">
+                    AI-driven optimization to prevent grid overload and improve energy efficiency.
+                </p>
+                <div class="hero-fade flex flex-wrap gap-4">
+                    <a href="login.html" onclick="handleGetStarted(event)" class="pulse-glow bg-[#BFFF00] text-on-primary-fixed font-headline font-bold px-10 py-4 text-lg rounded hover:opacity-90 transition-all flex items-center gap-2">
+                        Get Started <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Floating Glassmorphism Badge -->
+            <div class="hero-fade absolute bottom-8 left-1/2 -translate-x-1/2 left-auto translate-x-0 bottom-8 right-8 glass-panel p-4 rounded-xl border border-white/10 flex gap-6 z-20 float-badge">
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-[#BFFF00] font-bold" data-count="8000" data-suffix="K+">8K+</p>
+                    <p class="text-[10px] text-white/70 uppercase">Charging Stations</p>
+                </div>
+                <div class="w-px h-8 bg-white/10"></div>
+                <div>
+                    <p class="text-xs uppercase tracking-widest text-[#BFFF00] font-bold" data-count="50000" data-suffix="K+">50K+</p>
+                    <p class="text-[10px] text-white/70 uppercase">EV Drivers</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. PROBLEM SECTION -->
+    <section id="problem" class="py-[100px] px-8 relative circuit-bg">
+        <div class="max-w-[1440px] mx-auto">
+            <h2 class="reveal michroma-heading text-4xl text-5xl text-6xl text-center mb-24 italic">
+                <span class="text-white">THE EV CHARGING</span> <span class="text-[#BFFF00]">CHALLENGE</span>
+            </h2>
+            <div class="grid grid-cols-3 gap-10">
+                <!-- Card 1 -->
+                <div class="reveal stagger-1 challenge-card p-10 rounded-2xl flex flex-col items-center text-center group relative overflow-hidden">
+                    <div class="relative mb-8">
+                        <div class="absolute inset-0 bg-red-600/30 blur-3xl rounded-full scale-150"></div>
+                        <div class="w-20 h-20 bg-red-500/10 border border-red-500/20 flex items-center justify-center rounded-2xl text-red-500 relative z-10">
+                            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">warning</span>
+                        </div>
+                    </div>
+                    <h4 class="michroma-heading text-[18px] mb-4 text-white">Grid Overload</h4>
+                    <p class="text-on-surface-variant leading-relaxed">Peak demand causes dangerous strain on power infrastructure during high-usage hours.</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="reveal stagger-2 challenge-card p-10 rounded-2xl flex flex-col items-center text-center group relative overflow-hidden">
+                    <div class="relative mb-8">
+                        <div class="absolute inset-0 bg-amber-600/30 blur-3xl rounded-full scale-150"></div>
+                        <div class="w-20 h-20 bg-amber-500/10 border border-amber-500/20 flex items-center justify-center rounded-2xl text-amber-500 relative z-10">
+                            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+                        </div>
+                    </div>
+                    <h4 class="michroma-heading text-[18px] mb-4 text-white">Unpredictable Patterns</h4>
+                    <p class="text-on-surface-variant leading-relaxed">Charging behavior is traditionally random and extremely difficult to forecast accurately.</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="reveal stagger-3 challenge-card p-10 rounded-2xl flex flex-col items-center text-center group relative overflow-hidden">
+                    <div class="relative mb-8">
+                        <div class="absolute inset-0 bg-orange-600/30 blur-3xl rounded-full scale-150"></div>
+                        <div class="w-20 h-20 bg-orange-500/10 border border-orange-500/20 flex items-center justify-center rounded-2xl text-orange-500 relative z-10">
+                            <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">balance</span>
+                        </div>
+                    </div>
+                    <h4 class="michroma-heading text-[18px] mb-4 text-white">Inefficient Distribution</h4>
+                    <p class="text-on-surface-variant leading-relaxed">Massive amounts of energy are wasted daily through poor localized load management.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. SOLUTION SECTION -->
+    <section id="solution" class="py-32 bg-surface-container-lowest relative overflow-hidden">
+        <div class="max-w-[1440px] mx-auto px-8 relative z-10">
+            <div class="text-center mb-24">
+                <h2 class="reveal michroma-heading text-4xl text-5xl mb-6">Our Solution</h2>
+                <p class="reveal text-on-surface-variant text-xl">GridPulz uses AI to predict demand and optimize charging.</p>
+            </div>
+            <div class="flex flex-row justify-between items-start gap-12 max-w-5xl mx-auto relative">
+                <div class="absolute top-8 left-0 right-0 h-[2px] bg-[#BFFF00]/20 block -z-10"></div>
+                <!-- Step 1 -->
+                <div class="reveal stagger-1 flex-1 text-center group">
+                    <div class="w-16 h-16 bg-surface-dim border-2 border-[#BFFF00] rounded-full flex items-center justify-center mx-auto mb-6 z-10 shadow-[0_0_15px_rgba(184,246,0,0.4)] group-hover:bg-[#BFFF00] transition-all">
+                        <span class="text-[#BFFF00] font-headline font-bold group-hover:text-on-primary-fixed">01</span>
+                    </div>
+                    <h4 class="michroma-heading text-xl mb-2">Collect Data</h4>
+                </div>
+                <!-- Step 2 -->
+                <div class="reveal stagger-2 flex-1 text-center group">
+                    <div class="w-16 h-16 bg-surface-dim border-2 border-[#BFFF00] rounded-full flex items-center justify-center mx-auto mb-6 z-10 shadow-[0_0_15px_rgba(184,246,0,0.4)] group-hover:bg-[#BFFF00] transition-all">
+                        <span class="text-[#BFFF00] font-headline font-bold group-hover:text-on-primary-fixed">02</span>
+                    </div>
+                    <h4 class="michroma-heading text-xl mb-2">Predict Demand</h4>
+                </div>
+                <!-- Step 3 -->
+                <div class="reveal stagger-3 flex-1 text-center group">
+                    <div class="w-16 h-16 bg-[#BFFF00] rounded-full flex items-center justify-center mx-auto mb-6 z-10 shadow-[0_0_25px_rgba(184,246,0,0.6)]">
+                        <span class="text-on-primary-fixed font-headline font-bold">03</span>
+                    </div>
+                    <h4 class="michroma-heading text-xl mb-2">Optimize Charging</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. FEATURES SECTION -->
+    <section id="features" class="py-32 px-8 relative dot-grid">
+        <div class="max-w-[1440px] mx-auto">
+            <div class="text-center mb-24">
+                <h2 class="reveal michroma-heading text-4xl text-5xl text-6xl">
+                    <span class="text-white">WHAT MAKES GRIDPULZ</span> <br class="block"/><span class="text-[#BFFF00]">DIFFERENT</span>
+                </h2>
+            </div>
+            <div class="grid grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <!-- Card 1 -->
+                <div class="reveal stagger-1 feature-card p-10 rounded-xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-full h-[2px] bg-[#BFFF00]"></div>
+                    <div class="flex flex-col h-full">
+                        <div class="w-16 h-16 bg-[#BFFF00] rounded-xl flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+                            <span class="material-symbols-outlined text-on-primary-fixed text-4xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                        </div>
+                        <h3 class="michroma-heading text-xl mb-4 text-white">Smart Load Balancing</h3>
+                        <p class="text-[#C3CAAC] leading-relaxed mb-8 text-lg">Intelligent distribution that adjusts power flow in real-time based on active session priorities.</p>
+                        <div class="mt-auto">
+                            <a class="text-[#BFFF00] font-headline font-bold flex items-center gap-2 hover:gap-3 transition-all" href="#">
+                                Learn more <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="reveal stagger-2 feature-card p-10 rounded-xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-full h-[2px] bg-[#BFFF00]"></div>
+                    <div class="flex flex-col h-full">
+                        <div class="w-16 h-16 bg-[#BFFF00] rounded-xl flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+                            <span class="material-symbols-outlined text-on-primary-fixed text-4xl" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+                        </div>
+                        <h3 class="michroma-heading text-xl mb-4 text-white">Real-Time Analytics</h3>
+                        <p class="text-[#C3CAAC] leading-relaxed mb-8 text-lg">Deep visibility into energy consumption metrics across thousands of distributed stations.</p>
+                        <div class="mt-auto">
+                            <a class="text-[#BFFF00] font-headline font-bold flex items-center gap-2 hover:gap-3 transition-all" href="#">
+                                Learn more <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="reveal stagger-3 feature-card p-10 rounded-xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-full h-[2px] bg-[#BFFF00]"></div>
+                    <div class="flex flex-col h-full">
+                        <div class="w-16 h-16 bg-[#BFFF00] rounded-xl flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+                            <span class="material-symbols-outlined text-on-primary-fixed text-4xl" style="font-variation-settings: 'FILL' 1;">psychology</span>
+                        </div>
+                        <h3 class="michroma-heading text-xl mb-4 text-white">AI Predictions</h3>
+                        <p class="text-[#C3CAAC] leading-relaxed mb-8 text-lg">Machine learning that learns from historical usage to predict and prepare for future spikes.</p>
+                        <div class="mt-auto">
+                            <a class="text-[#BFFF00] font-headline font-bold flex items-center gap-2 hover:gap-3 transition-all" href="#">
+                                Learn more <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 4 -->
+                <div class="reveal stagger-4 feature-card p-10 rounded-xl relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-full h-[2px] bg-[#BFFF00]"></div>
+                    <div class="flex flex-col h-full">
+                        <div class="w-16 h-16 bg-[#BFFF00] rounded-xl flex items-center justify-center mb-8 shadow-[0_0_20px_rgba(191,255,0,0.3)]">
+                            <span class="material-symbols-outlined text-on-primary-fixed text-4xl" style="font-variation-settings: 'FILL' 1;">battery_charging_full</span>
+                        </div>
+                        <h3 class="michroma-heading text-xl mb-4 text-white">Efficient Charging</h3>
+                        <p class="text-[#C3CAAC] leading-relaxed mb-8 text-lg">Maximize the lifespan of grid infrastructure while providing users with faster, reliable charging.</p>
+                        <div class="mt-auto">
+                            <a class="text-[#BFFF00] font-headline font-bold flex items-center gap-2 hover:gap-3 transition-all" href="#">
+                                Learn more <span class="material-symbols-outlined text-base">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. DASHBOARD SECTION -->
+    <section id="dashboard" class="py-32 px-8 overflow-hidden bg-surface-dim">
+        <div class="max-w-[1440px] mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="reveal michroma-heading text-4xl text-5xl mb-6">See GridPulz in Action</h2>
+            </div>
+            <div class="reveal flex flex-wrap justify-center gap-6 mb-12">
+                <div class="bg-surface-container px-8 py-4 rounded border border-[#BFFF00]/20 text-center">
+                    <p class="text-[#BFFF00] text-3xl font-bold font-headline">2,847</p>
+                    <p class="text-xs uppercase tracking-widest text-on-surface-variant">Stations</p>
+                </div>
+                <div class="bg-surface-container px-8 py-4 rounded border border-[#BFFF00]/20 text-center">
+                    <p class="text-[#BFFF00] text-3xl font-bold font-headline">18.4 GWh</p>
+                    <p class="text-xs uppercase tracking-widest text-on-surface-variant">Today</p>
+                </div>
+                <div class="bg-surface-container px-8 py-4 rounded border border-[#BFFF00]/20 text-center">
+                    <p class="text-secondary text-3xl font-bold font-headline">97.2%</p>
+                    <p class="text-xs uppercase tracking-widest text-on-surface-variant">Efficiency</p>
+                </div>
+            </div>
+            <div class="reveal-scale relative perspective-mockup max-w-5xl mx-auto cursor-pointer group hover:-translate-y-2 transition-transform duration-500 shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(191,255,0,0.3)] animate-float" onclick="window.location.href='login.html'">
+                <div class="glass-panel border border-outline-variant/30 rounded-xl overflow-hidden shadow-2xl">
+                    <div class="bg-surface-container-high px-6 py-3 border-b border-outline-variant/20 flex items-center justify-between">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-error opacity-50"></div>
+                            <div class="w-3 h-3 rounded-full bg-[#BFFF00] opacity-50"></div>
+                            <div class="w-3 h-3 rounded-full bg-secondary opacity-50"></div>
+                        </div>
+                        <div class="bg-surface-dim px-4 py-1 rounded text-xs text-on-surface-variant font-mono">gridpulz.app/dashboard/overview</div>
+                    </div>
+                    <div class="grid grid-cols-12 gap-6 p-8 bg-surface-container-low">
+                        <div class="col-span-8 space-y-6">
+                            <div class="bg-surface-dim p-6 rounded-lg border border-outline-variant/10">
+                                <h4 class="font-headline font-bold text-lg mb-6 uppercase tracking-widest">Energy Consumption &amp; ML Predictions</h4>
+                                <div class="h-64 flex items-end gap-2 px-2 relative">
+                                    <!-- Grid lines -->
+                                    <div class="absolute inset-x-0 top-0 h-px bg-white/5"></div>
+                                    <div class="absolute inset-x-0 top-1/2 h-px bg-white/5"></div>
+                                    <div class="flex-1 bg-[#BFFF00]/20 rounded-t h-2/3"></div>
+                                    <div class="flex-1 bg-[#BFFF00]/20 rounded-t h-1/2"></div>
+                                    <div class="flex-1 bg-[#BFFF00]/40 rounded-t h-3/4 relative">
+                                        <div class="absolute -top-1 left-1/2 w-2 h-2 bg-[#BFFF00] rounded-full -translate-x-1/2 shadow-[0_0_10px_#BFFF00]"></div>
+                                    </div>
+                                    <div class="flex-1 bg-[#BFFF00]/60 rounded-t h-4/5"></div>
+                                    <div class="flex-1 bg-[#BFFF00]/20 rounded-t h-full"></div>
+                                    <div class="flex-1 bg-[#BFFF00]/20 rounded-t h-3/5"></div>
+                                    <div class="flex-1 bg-[#BFFF00]/10 rounded-t h-2/5 border-t border-dashed border-[#BFFF00]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-span-4 bg-surface-dim rounded-lg border border-outline-variant/10 p-4">
+                            <h4 class="font-headline font-bold mb-4 text-sm uppercase">Station Status</h4>
+                            <div class="space-y-4">
+                                <div class="glass-panel p-3 rounded text-xs border border-white/5">
+                                    <div class="flex justify-between mb-1">
+                                        <span>Station #42</span>
+                                        <span class="text-[#BFFF00]">Active</span>
+                                    </div>
+                                    <div class="w-full h-1 bg-surface-container rounded-full"><div class="w-[85%] h-full bg-[#BFFF00]"></div></div>
+                                </div>
+                                <div class="glass-panel p-3 rounded text-xs border border-white/5">
+                                    <div class="flex justify-between mb-1">
+                                        <span>Station #09</span>
+                                        <span class="text-secondary">Optimizing</span>
+                                    </div>
+                                    <div class="w-full h-1 bg-surface-container rounded-full"><div class="w-[42%] h-full bg-secondary"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. ABOUT SECTION -->
+    <section id="about" class="py-32 px-8 max-w-[1440px] mx-auto border-y border-outline-variant/10">
+        <div class="grid grid-cols-2 gap-16 items-center">
+            <div class="reveal-left">
+                <h2 class="michroma-heading text-4xl text-5xl mb-8">Who We Are</h2>
+                <p class="text-on-surface-variant text-xl leading-relaxed mb-8">
+                    We are building intelligent solutions for the future of energy. GridPulz is on a mission to make EV charging infrastructure smarter, greener, and more reliable for everyone.
+                </p>
+                <a href="about.html" class="inline-block text-center border border-[#BFFF00] text-[#BFFF00] font-headline font-bold px-10 py-4 text-lg rounded hover:bg-[#BFFF00]/10 transition-all uppercase">
+                    Learn More
+                </a>
+            </div>
+            <div class="reveal-right relative">
+                <div class="aspect-video bg-surface-container rounded-lg border border-outline-variant/20 overflow-hidden">
+                    <img alt="Team working" class="w-full h-full object-cover grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCL9wICDQ336pGQDGQFFuXipD6gg87vytVgmY6vusROihKYupZqmLZ6NihsKU1AQHzYof4BLgdEEv7XkDqEMZz99RRWZUo8w-O-CRZG8r5J8-xFDDDYEWr_9Nf6ZzT-AziJXUex5l4Ore315Hytupn6BazibaH-sUWXG1-7K3FRqUDjWyz8Upp_SEGUKjXcFrCSke4QmqYiQo_GOXivY988fXlCRUk-gBk6pRvggIfd77R4vNuTb26T_NqdLaS7OTsKcxLSlzr5jyY"/>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. CTA SECTION -->
+    <section id="cta" class="py-32 px-8 text-center bg-gradient-to-b from-surface-dim to-[#BFFF00]/10">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="reveal michroma-heading text-4xl text-5xl text-6xl mb-8 text-center">
+                <span class="text-white block">START OPTIMIZING</span>
+                <span class="text-[#BFFF00] block">EV CHARGING TODAY</span>
+            </h2>
+            <p class="reveal text-on-surface-variant text-xl mb-12">Join thousands of grid operators already using GridPulz.</p>
+
+        </div>
+    </section>
+
+    <!-- 9. FOOTER -->
+    <footer class="w-full bg-[#0E0E13] border-t border-[#434933]/15">
+        <div class="grid grid-cols-2 grid-cols-4 gap-12 px-8 py-20 max-w-[1440px] mx-auto">
+            <div>
+                <img alt="GridPulz Logo" class="h-24 w-auto mb-4 block mix-blend-lighten" src="assets/gridpulz_logo.png"/>
+                <p class="text-[#C3CAAC] font-body text-xs leading-relaxed max-w-[200px]">Powering Smarter Grids, One Charge at a Time.</p>
+            </div>
+            <div>
+                <p class="michroma-heading text-xs mb-6 text-[#BFFF00]">Product</p>
+                <ul class="space-y-4">
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">Analytics</a></li>
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">Load Balancing</a></li>
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">API Docs</a></li>
+                </ul>
+            </div>
+            <div>
+                <p class="michroma-heading text-xs mb-6 text-[#BFFF00]">Company</p>
+                <ul class="space-y-4">
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">About Us</a></li>
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">Careers</a></li>
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">Press</a></li>
+                </ul>
+            </div>
+            <div>
+                <p class="michroma-heading text-xs mb-6 text-[#BFFF00]">Resources</p>
+                <ul class="space-y-4">
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">Documentation</a></li>
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">Help Center</a></li>
+                    <li><a class="text-[#C3CAAC] hover:text-[#BFFF00] transition-colors duration-200 uppercase text-xs tracking-widest" href="#">Case Studies</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="px-8 py-10 max-w-[1440px] mx-auto border-t border-outline-variant/10 flex flex-row justify-between items-center gap-6">
+            <p class="font-body text-sm uppercase tracking-widest text-[#C3CAAC]">© 2025 GRIDPULZ INDUSTRIAL. ALL RIGHTS RESERVED.</p>
+            <div class="flex gap-8">
+                <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#BFFF00]" href="#">Privacy</a>
+                <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#BFFF00]" href="#">Terms</a>
+                <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#BFFF00]" href="#">Social</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll Reveal & Nav Active State Script -->
+    <script>
+        // Scroll reveal observer
+        const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+        revealEls.forEach(el => revealObserver.observe(el));
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Active nav link on scroll
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active', 'text-[#BFFF00]', 'font-bold');
+                link.classList.add('text-[#C3CAAC]');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active', 'text-[#BFFF00]', 'font-bold');
+                    link.classList.remove('text-[#C3CAAC]');
+                }
+            });
+        });
+
+        // Animated counter for stats
+        function animateCounter(el, target, suffix = '') {
+            let start = 0;
+            const duration = 2000;
+            const startTime = performance.now();
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(eased * target);
+                if (target >= 1000) {
+                    el.textContent = (current / 1000).toFixed(0) + suffix;
+                } else {
+                    el.textContent = current + suffix;
+                }
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        const counterEls = document.querySelectorAll('[data-count]');
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    animateCounter(el, parseInt(el.dataset.count), el.dataset.suffix || '');
+                    counterObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+        counterEls.forEach(el => counterObserver.observe(el));
+
+        function handleGetStarted(e) {
+            e.preventDefault();
+            if (sessionStorage.getItem('isAuthenticated') === 'true') {
+                if (sessionStorage.getItem('userRole') === 'operator') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    window.location.href = 'user-dashboard.html';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+
+</body>
+</html>
+
+
+
+
+

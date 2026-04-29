@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GRIDPULZ | Priority Scheduler</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="components/top-nav-enhancements.css">
+    <link rel="stylesheet" href="components/font-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neon: '#CCFF00',
+                        alert: '#FF4444',
+                        muted: '#aaaaaa',
+                        dark: {
+                            bg: '#131313',
+                            surface: '#1b1b1b',
+                            border: '#353535'
+                        }
+                    },
+                    fontFamily: {
+                        headline: ['Michroma', 'sans-serif'],
+                        body: ['Josefin Sans', 'sans-serif'],
+                        michroma: ['Michroma', 'sans-serif'],
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            from: { opacity: '0', transform: 'translateY(10px)' },
+                            to: { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        pulse_neon: {
+                            '0%,100%': { boxShadow: '0 0 0 0 rgba(204,255,0,0.2)' },
+                            '50%': { boxShadow: '0 0 0 10px rgba(204,255,0,0)' }
+                        },
+                        priority_shift: {
+                            '0%': { transform: 'translateX(-4px)', opacity: '0.7' },
+                            '50%': { transform: 'translateX(2px)', boxShadow: '0 0 20px rgba(204,255,0,0.3)' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' }
+                        },
+                        score_glow: {
+                            '0%, 100%': { boxShadow: 'inset 0 0 0 1px rgba(204,255,0,0.3)' },
+                            '50%': { boxShadow: 'inset 0 0 12px rgba(204,255,0,0.5), 0 0 8px rgba(204,255,0,0.4)' }
+                        },
+                        pulse_urgent: {
+                            '0%,100%': { borderColor: 'rgba(255,77,77,0.5)', boxShadow: '0 0 0 0 rgba(255,77,77,0.1)' },
+                            '50%': { borderColor: 'rgba(255,77,77,0.8)', boxShadow: '0 0 0 8px rgba(255,77,77,0)' }
+                        },
+                        wait_counter: {
+                            '0%': { color: '#e4e1e9', scale: '1' },
+                            '50%': { color: '#CCFF00', scale: '1.05' },
+                            '100%': { color: '#e4e1e9', scale: '1' }
+                        }
+                    },
+                    animation: {
+                        fadeIn: 'fadeIn 0.55s ease forwards',
+                        pulse_neon: 'pulse_neon 2.2s ease-in-out infinite',
+                        priority_shift: 'priority_shift 0.6s ease-out',
+                        score_glow: 'score_glow 1.5s ease-in-out infinite',
+                        pulse_urgent: 'pulse_urgent 1.8s ease-in-out infinite',
+                        wait_counter: 'wait_counter 0.8s ease-in-out'
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            --bg-main: #131313;
+            --bg-surface: #1A1A1A;
+            --bg-elevated: #1b1b1b;
+            --border: #353535;
+            --accent-green: #CCFF00;
+            --accent-red: #FF4444;
+            --text-primary: #FFFFFF;
+            --text-secondary: #aaaaaa;
+        }
+        body { font-family: 'Josefin Sans', sans-serif; }
+        body {
+            min-width: 1280px;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(204,255,0,0.05), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(204,255,0,0.03), transparent 20%),
+                var(--bg-main);
+            color: var(--text-primary);
+        }
+        h1, h2, h3, h4, h5, h6, .brand-logo, .metric-number, #m-users, #m-slots, #m-alloc { font-family: 'Michroma', sans-serif !important; }
+        #top-nav { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: var(--bg-surface); border-bottom: 1px solid var(--border); z-index: 200; position: sticky; top: 0; flex-shrink: 0; }
+        #page-body { display: flex; flex: 1; min-height: 0; }
+        #main-content { 
+            flex: 1; 
+            padding: 32px 40px; 
+            background: var(--bg-main); 
+            min-height: calc(100vh - 60px); 
+            overflow-y: auto; 
+            margin-left: 68px; 
+            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .gp-sidebar.expanded + #main-content {
+            margin-left: 220px;
+        }
+        @media (max-width: 1024px) {
+            #main-content { margin-left: 0; }
+            .gp-sidebar.expanded + #main-content { margin-left: 0; }
+        }
+        .nav-brand { display: flex; align-items: center; gap: 12px; }
+        .nav-logo { width: 32px; height: 32px; object-fit: contain; }
+        .brand-name { font-family: 'Michroma', sans-serif; color: var(--accent-green); letter-spacing: .18em; font-size: 14px; }
+        .nav-profile { cursor: pointer; }
+        .avatar { width: 36px; height: 36px; border-radius: 9999px; background: rgba(204,255,0,.12); border: 1px solid rgba(204,255,0,.3); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .avatar img { width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; }
+        .profile-wrap { position: relative; }
+        .profile-dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 240px; background: #1e1e1e; border: 1px solid var(--border); border-radius: 12px; padding: 8px; display: none; z-index: 9999; }
+        .profile-dropdown.open { display: block; }
+        .dropdown-header { display: flex; gap: 10px; align-items: center; padding: 8px 12px; }
+        .avatar-lg { width: 36px; height: 36px; border-radius: 9999px; background: rgba(204,255,0,.12); border: 1px solid rgba(204,255,0,.3); color: var(--accent-green); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .avatar-lg img { width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; }
+        .dd-name { font-size: 13px; color: #fff; margin: 0; font-family: 'Poppins', sans-serif !important; }
+        .dd-email { font-size: 12px; color: var(--text-secondary); margin: 2px 0 0; font-family: 'Poppins', sans-serif !important; }
+        .dd-divider { border: 0; border-top: 1px solid var(--border); margin: 8px 0; }
+        .dd-item { display: block; padding: 9px 12px; border-radius: 8px; color: #ccc; font-size: 13px; text-decoration: none; font-family: 'Poppins', sans-serif !important; }
+        .dd-item:hover { background: #2a2a2a; color: #fff; }
+        .dd-logout { color: #FF4444; width: 100%; text-align: left; background: transparent; border: 0; }
+        .back-btn { margin: 0 16px 16px; padding: 8px 12px; background: #222; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 8px; cursor: pointer; font-size: 13px; font-family: 'Poppins', sans-serif; }
+        .logout-btn { margin-top: auto; margin: auto 16px 16px; padding: 10px; border: 1px solid rgba(255,68,68,0.33); color: #FF4444; border-radius: 8px; background: transparent; cursor: pointer; font-family: 'Poppins', sans-serif; }
+        .nav-links { display: flex; flex-direction: column; gap: 4px; }
+        .nav-links a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--text-secondary); border-left: 3px solid transparent; text-decoration: none; font-family: 'Poppins', sans-serif !important; font-size: 14px; }
+        .nav-links a.active { background: rgba(204,255,0,.08); border-left-color: var(--accent-green); color: var(--accent-green); }
+        #top-nav, #top-nav *, #sidebar, #sidebar *, .profile-dropdown, .profile-dropdown * { font-family: 'Michroma', sans-serif !important; }
+        .icon-text { display: flex; align-items: center; gap: 6px; }
+        .kpi-row { display: flex; align-items: stretch; gap: 12px; }
+        .kpi-card { padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-surface); display: flex; flex-direction: column; justify-content: center; min-height: 128px; flex: 1; }
+        .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-secondary); margin-bottom: 8px; }
+        .kpi-value { font-family: 'Michroma', sans-serif; font-size: clamp(28px, 4vw, 48px); color: var(--text-primary); line-height: 1; }
+        [class*='bg-neon'], [class*='border-neon'] { box-shadow: 0 0 12px rgba(204, 255, 0, 0.25); }
+        .grid-overlay {
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 38px 38px;
+            mask-image: radial-gradient(circle at center, black 18%, transparent 85%);
+        }
+            table th, table td { white-space: nowrap; }
+        .surface-ink { background: #1b1b1b; }
+        .terminal-panel {
+            background: linear-gradient(180deg, rgba(13,13,13,0.98), rgba(8,8,8,0.98));
+            border: 1px solid #353535;
+        }
+        .glass-panel {
+            background: rgba(27,27,27,0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid #353535;
+        }
+        .metric-pill {
+            transition: all 180ms ease;
+        }
+        .metric-pill:hover { box-shadow: 0 0 0 1px rgba(204,255,0,0.14), 0 0 18px rgba(204,255,0,0.08); }
+        .algo-step { transition: all 180ms ease; border-left: 2px solid rgba(255,255,255,0.1); }
+        .algo-step.active { border-left-color: #CCFF00; color: #FFFFFF; background: rgba(204,255,0,0.06); }
+        .score-bar-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 9999px; margin-top: 4px; overflow: hidden; }
+        .score-bar-fill { height: 4px; border-radius: 9999px; transition: width 0.4s ease; }
+        .queue-item { transition: all 180ms ease; }
+        .queue-item.winner { border-color: rgba(34,197,94,0.5); background: rgba(34,197,94,0.05); }
+        .queue-item.loser { border-color: rgba(234,179,8,0.45); filter: brightness(0.7); }
+        .bar-wrap { height: 6px; background: rgba(255,255,255,0.1); border-radius: 9999px; flex: 1; overflow: hidden; }
+        .bar { height: 100%; border-radius: 9999px; transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+        input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 9999px; background: linear-gradient(90deg, rgba(255,68,68,0.7), rgba(255,165,0,0.7), rgba(204,255,0,0.9)); }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 9999px; background: #CCFF00; border: 3px solid #131313; box-shadow: 0 0 12px rgba(204,255,0,0.5); }
+        input[type="range"]::-moz-range-track { height: 6px; border-radius: 9999px; background: linear-gradient(90deg, rgba(255,68,68,0.7), rgba(255,165,0,0.7), rgba(204,255,0,0.9)); }
+        input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 9999px; background: #CCFF00; border: 3px solid #131313; box-shadow: 0 0 12px rgba(204,255,0,0.5); }
+        .trace-console {
+            background: linear-gradient(180deg, #080808, #101010);
+            border: 1px solid #353535;
+            box-shadow: inset 0 0 0 1px rgba(204,255,0,0.05);
+        }
+        .trace-line { color: #aaaaaa; }
+        .trace-line.active { color: #CCFF00; }
+        .animateIn { animation: fadeIn 0.55s ease forwards; }
+
+        /* Real-time Effects */
+        .queue-item {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .queue-item.rank-changed {
+            animation: priority_shift 0.6s ease-out;
+        }
+
+        .score-badge {
+            position: relative;
+            display: inline-block;
+        }
+
+        .score-badge.updating {
+            animation: score_glow 1.5s ease-in-out infinite;
+        }
+
+        .wait-timer {
+            font-variant-numeric: tabular-nums;
+            position: relative;
+        }
+
+        .wait-timer.ticking {
+            animation: wait_counter 0.8s ease-in-out;
+        }
+
+        .battery-critical {
+            animation: pulse_urgent 1.8s ease-in-out infinite;
+        }
+
+        .score-live {
+            transition: all 0.3s ease;
+        }
+
+        .queue-item.live-priority-boost {
+            border-color: rgba(204, 255, 0, 0.4) !important;
+            box-shadow: 0 0 16px rgba(204, 255, 0, 0.15), inset 0 0 8px rgba(204, 255, 0, 0.05) !important;
+        }
+
+        .algo-step {
+            transition: all 0.3s ease;
+        }
+
+        .algo-step.step-active {
+            animation: pulse_neon 1.5s ease-in-out;
+        }
+
+        .station-updating {
+            animation: pulse_neon 1s ease-in-out;
+        }
+
+        /* Live update indicator */
+        .update-pulse::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px;
+            width: 4px;
+            height: 4px;
+            background: #CCFF00;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+            transform: translateY(-50%);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Smooth transitions for metrics */
+        #m-users, #m-slots, #m-alloc {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .metric-pulse {
+            animation: pulse_neon 0.8s ease-out;
+        }
+    </style>
+</head>
+    <body class="bg-[#131313] text-white min-h-screen font-sans min-w-[1280px] overflow-x-auto">
+    <div class="fixed inset-0 pointer-events-none grid-overlay opacity-40"></div>
+
+    <header id="top-nav">
+        <div class="nav-brand">
+            <img src="assets/gridpulz_logo.png" alt="GridPulz" class="nav-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span class="brand-name">GridPulz</span>
+        </div>
+        <div class="profile-wrap">
+            <div class="nav-profile" id="profileTrigger" onclick="toggleProfileDropdown()">
+                <img src="assets/user.png" alt="Profile" class="avatar">
+            </div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="dropdown-header">
+                    <img src="assets/user.png" alt="Profile" class="avatar-lg">
+                    <div>
+                        <p class="dd-name">Station Operator</p>
+                        <p class="dd-email">sarz@gmail.com</p>
+                    </div>
+                </div>
+                <hr class="dd-divider">
+                <a href="profile.html" class="dd-item">My Profile</a>
+                <a href="settings.html" class="dd-item">Settings</a>
+                <hr class="dd-divider">
+                <button onclick="handleLogout()" class="dd-item dd-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="page-body">
+    <aside class="gp-sidebar" id="main-sidebar">
+        <div class="gp-sidebar__logo-zone">
+            <div class="gp-sidebar__logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z"/></svg></div>
+            <div class="gp-sidebar__brand">GridPulz</div>
+        </div>
+        <nav class="gp-sidebar__nav">
+            <span class="gp-sidebar__sec-label">Control</span>
+            <button class="gp-sidebar__nav-item" data-page="dashboard">
+                <span class="gp-sidebar__nav-icon"><img src="assets/dashboard.png" alt="Dashboard icon"></span>
+                <span class="gp-sidebar__nav-label">Dashboard</span>
+            </button>
+            <button class="gp-sidebar__nav-item" data-page="operator-dashboard">
+                <span class="gp-sidebar__nav-icon"><img src="assets/operator.png" alt="Operator icon"></span>
+                <span class="gp-sidebar__nav-label">Operator</span>
+            </button>
+            <button class="gp-sidebar__nav-item active" data-page="scheduler">
+                <span class="gp-sidebar__nav-icon"><img src="assets/scheduler.png" alt="Scheduler icon"></span>
+                <span class="gp-sidebar__nav-label">Scheduler</span>
+            </button>
+            <button class="gp-sidebar__nav-item" data-page="alerts">
+                <span class="gp-sidebar__nav-icon"><img src="assets/alerts.png" alt="Alerts icon"></span>
+                <span class="gp-sidebar__nav-label">Alerts</span>
+                <span class="gp-sidebar__badge" id="alerts-badge" style="display:none;"></span>
+            </button>
+            <span class="gp-sidebar__sec-label">Infrastructure</span>
+            <button class="gp-sidebar__nav-item" data-page="grid-management">
+                <span class="gp-sidebar__nav-icon"><img src="assets/network.png" alt="Grid Management icon"></span>
+                <span class="gp-sidebar__nav-label">Grid Management</span>
+            </button>
+            <button class="gp-sidebar__nav-item" data-page="systems">
+                <span class="gp-sidebar__nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="5"/><path d="M6 8v2m6-2v2m6-2v2M2 15h20v2H2zm0 4h20v2H2z"/></svg></span>
+                <span class="gp-sidebar__nav-label">Systems</span>
+            </button>
+        </nav>
+        <div class="gp-sidebar__separator"></div>
+        <div class="gp-sidebar__logout-zone">
+            <button class="gp-sidebar__nav-item logout" onclick="handleLogout()">
+                <span class="gp-sidebar__nav-icon"><img src="assets/logout.png" alt="Logout icon"></span>
+                <span class="gp-sidebar__nav-label">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main id="main-content">
+    <div class="max-w-[1400px] mx-auto p-6 dot-grid min-h-[calc(100vh-80px)] pb-8">
+        <section class="flex flex-col gap-3 mb-6 animateIn">
+            <div class="flex items-center gap-2 text-[10px] uppercase tracking-[0.28em] text-muted">
+                <span class="w-2 h-2 rounded-full bg-neon"></span>
+                Scheduler Control Room
+            </div>
+            <div class="flex flex-row items-end justify-between gap-3">
+                <div>
+                    <h1 class="text-4xl font-bold tracking-tight text-white">Priority Scheduler</h1>
+                    <p class="text-sm text-muted mt-2 max-w-2xl">Industrial queue orchestration, ranking, and routing simulation.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-12 gap-6 items-start">
+            <div class="col-span-4 space-y-6 flex flex-col">
+                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow">
+                    <h2 class="text-xs font-bold uppercase tracking-[0.24em] text-muted mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-neon">ev_station</span> Charging Network
+                    </h2>
+                    <div id="stations-list" class="space-y-3"></div>
+                </div>
+
+            </div>
+
+            <div class="col-span-4 space-y-6 flex flex-col">
+                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow flex flex-col flex-1 h-[450px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xs font-bold uppercase tracking-[0.24em] text-muted flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm text-neon">reorder</span> Priority Queue
+                        </h2>
+                        <div class="flex gap-2">
+                            <button id="run-btn" class="bg-neon text-black font-bold uppercase tracking-[0.22em] text-[10px] px-3 py-2 rounded-sm hover:shadow-[0_0_15px_rgba(204,255,0,0.28)] transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">play_arrow</span> Run Target
+                            </button>
+                            <button id="reset-btn" class="bg-[#131313] hover:bg-[#1d1d1d] border border-[#353535] text-white font-bold uppercase tracking-[0.22em] text-[10px] px-3 py-2 rounded-sm transition-all">Reset</button>
+                        </div>
+                    </div>
+                    <div id="queue-list" class="flex-1 overflow-y-auto pr-2 space-y-2 pb-2">
+                        <div class="text-center py-10">
+                            <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">format_list_bulleted</span>
+                            <div class="text-[10px] uppercase tracking-[0.24em] text-muted">Queue is empty</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow">
+                    <h2 class="text-xs font-bold uppercase tracking-[0.24em] text-muted mb-3">Score Formula</h2>
+                    <div class="font-mono text-xs bg-[#131313] p-3 rounded-sm border border-[#353535] text-white/80 leading-relaxed">
+                        score =
+                        <span class="bg-blue-500/10 text-blue-300 border border-blue-500/20 px-1 rounded-sm">(100 - bat%)</span>×0.6 +
+                        <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-1 rounded-sm">waitMins</span>×0.3 -
+                        <span class="bg-orange-500/10 text-orange-300 border border-orange-500/20 px-1 rounded-sm">gridLoad%</span>×0.1 +
+                        <span class="bg-neon/10 text-neon border border-neon/20 px-1 rounded-sm">Wt</span>
+                    </div>
+                    <div class="text-[9px] uppercase tracking-[0.24em] text-muted mt-3 flex flex-col gap-1">
+                        <div><span class="text-blue-300">•</span> Lower battery - highest weight</div>
+                        <div><span class="text-emerald-300">•</span> Longer wait - secondary boost</div>
+                        <div><span class="text-orange-300">•</span> High grid load - station deprioritised</div>
+                        <div><span class="text-neon">•</span> Wt = 0 if pre-booked &gt;15 min away (passive)</div>
+                        <div><span class="text-neon">•</span> Wt ramps up within 15-min buffer window</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-4 space-y-6 flex flex-col">
+                <div class="surface-ink border border-[#353535] rounded-sm p-5 card-glow flex-1 h-[300px] flex flex-col">
+                    <h2 class="text-xs font-bold uppercase tracking-[0.24em] text-muted mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-neon">history</span> Allocation Log
+                    </h2>
+                    <div id="decision-log" class="flex-1 overflow-y-auto space-y-2">
+                        <div class="text-center py-8">
+                            <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">receipt_long</span>
+                            <div class="text-[10px] uppercase tracking-[0.24em] text-muted">Waiting for allocation...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trace-console rounded-sm p-5 flex-1 min-h-[320px] flex flex-col">
+                    <h2 class="text-xs font-bold uppercase tracking-[0.24em] text-muted mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm text-neon">memory</span> Algorithm Logic Trace
+                    </h2>
+                    <div id="algo-trace" class="space-y-1 font-mono text-[10px] leading-relaxed">
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">1. Collect queue + SoC array</div>
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">2. Calculate priority scores</div>
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">3. Sort by urgency (desc)</div>
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">4. Check availability / grid load</div>
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">5. ⏱ Check temporal constraints</div>
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">6. Assign slot to Top(vehicle)</div>
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">7. Overload / Full → Redirect</div>
+                        <div class="algo-step trace-line py-1.5 px-3 rounded-r-sm">8. Repeat for queue items</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </main>
+    </div>
+
+    <script src="js/scheduler.js"></script>
+    <script src="components/sidebar.js"></script>
+    <script src="components/top-nav-enhancements.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

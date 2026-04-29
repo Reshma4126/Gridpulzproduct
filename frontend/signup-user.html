@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GRIDPULZ | EV Driver Registration</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#35343a",
+                        "on-surface-variant": "#c3caac",
+                        "surface-dim": "#131318",
+                        "surface-container-highest": "#35343a",
+                        "primary-fixed": "#b8f600",
+                        "primary": "#ffffff",
+                        "on-background": "#e4e1e9",
+                        "on-surface": "#e4e1e9",
+                        "outline": "#8d9479",
+                        "background": "#131318",
+                        "error": "#ffb4ab",
+                        "surface": "#131318",
+                        "surface-container": "#1f1f25",
+                        "primary-container": "#b8f600",
+                    },
+                    fontFamily: {
+                        "headline": ["Michroma", "sans-serif"],
+                        "body": ["Michroma", "sans-serif"],
+                        "mono": ["Michroma", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(31, 31, 37, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(184, 246, 0, 0.1) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .michroma-heading {
+            font-family: 'Michroma', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .float-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen py-12 flex items-center justify-center relative min-w-[1440px] overflow-x-auto">
+    <div class="dot-grid absolute inset-0 opacity-40 z-0 pointer-events-none"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-[#BFFF00] opacity-[0.02] blur-[150px] rounded-full pointer-events-none z-0"></div>
+
+    <div class="glass-panel w-full max-w-3xl p-10 rounded-2xl border border-[#BFFF00]/30 relative z-10 shadow-[0_0_50px_rgba(191,255,0,0.1)] animate-fade">
+        <div class="flex justify-center mb-8">
+            <a href="index.html" class="hover:opacity-80 transition-opacity">
+                <img src="assets/gridpulz_logo.png" alt="GridPulz" class="h-32 mix-blend-lighten">
+            </a>
+        </div>
+        <h2 class="michroma-heading text-2xl text-center mb-2 text-[#BFFF00]">Register EV Identity</h2>
+        <p class="text-center font-body text-xs text-on-surface-variant mb-10">Connect to the intelligent grid. Create your EV driver profile.</p>
+
+        <form id="signup-user-form" onsubmit="handleUserSignup(event)">
+            <div class="grid grid-cols-2 gap-6 mb-6">
+                <!-- Left Column: Identity -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Full Name *</label>
+                        <input id="fullName" type="text" required class="w-full bg-[#131318] border border-outline/30 rounded px-4 py-3 text-white focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors font-body text-sm" placeholder="e.g. Jane Doe">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Email Address *</label>
+                        <input id="email" type="email" required class="w-full bg-[#131318] border border-outline/30 rounded px-4 py-3 text-white focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors font-body text-sm" placeholder="driver@gridpulz.app">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Phone</label>
+                        <input id="phone" type="tel" class="w-full bg-[#131318] border border-outline/30 rounded px-4 py-3 text-white focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors font-body text-sm" placeholder="+91 XXXXXXXXXX">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Access Password *</label>
+                        <input id="password" type="password" required class="w-full bg-[#131318] border border-outline/30 rounded px-4 py-3 text-white focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors font-body text-sm" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <!-- Right Column: Vehicle Parameters -->
+                <div class="space-y-4 bg-[#131318] p-4 rounded border border-outline/10">
+                    <div class="mb-4 pb-2 border-b border-outline/10 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#BFFF00] text-lg float-icon">electric_car</span>
+                        <span class="font-headline font-bold text-xs uppercase tracking-widest text-white">Vehicle Parameters</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Vehicle Type</label>
+                        <select id="vehicleType" class="w-full bg-[#0A0A0F] border border-outline/30 rounded px-4 py-3 text-white focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors font-body text-sm">
+                            <option value="">Select vehicle type</option>
+                            <option value="2W">2 Wheeler (Scooter / Bike)</option>
+                            <option value="3W">3 Wheeler (Auto)</option>
+                            <option value="4W">4 Wheeler (Car / SUV)</option>
+                            <option value="bus">Bus / Commercial</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Battery Capacity (kWh)</label>
+                        <input id="batteryCapacity" type="number" min="1" class="w-full bg-[#0A0A0F] border border-outline/30 rounded px-4 py-3 text-[#BFFF00] font-mono focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors text-sm" placeholder="e.g. 60">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Preferred Charging Type</label>
+                        <select id="preferredChargingType" class="w-full bg-[#0A0A0F] border border-outline/30 rounded px-4 py-3 text-white focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors font-body text-sm">
+                            <option value="">Select charging type</option>
+                            <option value="Fast">Fast Charging (DC)</option>
+                            <option value="Normal">Normal Charging (AC)</option>
+                            <option value="Any">Any Available</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-body uppercase tracking-widest text-on-surface-variant mb-2">Charging Preferences</label>
+                        <input id="chargingPreferences" type="text" class="w-full bg-[#0A0A0F] border border-outline/30 rounded px-4 py-3 text-white focus:outline-none focus:border-[#BFFF00] focus:ring-1 focus:ring-[#BFFF00] transition-colors font-body text-sm" placeholder="e.g. Fast near office, normal near home">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-[#BFFF00] text-[#161e00] font-headline font-bold uppercase tracking-widest py-4 rounded hover:bg-[#BFFF00]/90 hover:shadow-[0_0_20px_rgba(191,255,0,0.4)] transition-all flex items-center justify-center gap-2 mt-4 active:scale-95 group">
+                Create Identity <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">person_add</span>
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-outline/20 text-center">
+            <a href="login.html" class="font-body text-xs text-on-surface-variant hover:text-white transition-colors">Already have an account? <span class="text-[#BFFF00] uppercase tracking-widest font-bold ml-1">Authenticate Here</span></a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
+
+

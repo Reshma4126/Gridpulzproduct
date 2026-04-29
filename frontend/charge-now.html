@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>GRIDPULZ | EV Driver Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="components/font-theme.css">
+    <!-- Leaflet CSS and JS (OpenStreetMap - Free, no API key needed) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet Routing Machine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#35343a",
+                        "on-surface-variant": "#c3caac",
+                        "surface-dim": "#131318",
+                        "primary-fixed": "#b8f600",
+                        "on-background": "#e4e1e9",
+                        "on-surface": "#e4e1e9",
+                        "outline": "#8d9479",
+                        "background": "#131318",
+                        "error": "#ffb4ab",
+                        "surface": "#131318",
+                        "surface-container": "#1f1f25",
+                        "neon": "#BFFF00",
+                    },
+                    fontFamily: {
+                        "headline": ["Michroma", "monospace"],
+                        "body": ["Josefin Sans", "sans-serif"],
+                        "mono": ["Michroma", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        .dot-grid {
+            background-image: radial-gradient(rgba(184, 246, 0, 0.06) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        .glass-card {
+            background: rgba(31, 31, 37, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(191, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0); }
+        }
+
+        .status-pulse {
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-up {
+            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
+        .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
+        .fade-up-d3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* SoC slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #BFFF00 70%, #22c55e 100%);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #BFFF00;
+            border: 3px solid #0A0A0F;
+            margin-top: -7px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(191, 255, 0, 0.5);
+        }
+
+        input[type="range"]::-moz-range-track {
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #BFFF00 70%, #22c55e 100%);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #BFFF00;
+            border: 3px solid #0A0A0F;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(191, 255, 0, 0.5);
+        }
+
+        .nav-link-active {
+            background: rgba(191, 255, 0, 0.1);
+            border-color: rgba(191, 255, 0, 0.3);
+            color: #BFFF00;
+        }
+
+        /* Sidebar responsive margin */
+        #main-content { 
+            flex: 1; 
+            padding: 0; 
+            margin-left: 68px; 
+            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gp-sidebar.expanded + #main-content {
+            margin-left: 220px;
+        }
+        @media (max-width: 768px) { 
+            #main-content { margin-left: 0; } 
+            .gp-sidebar.expanded + #main-content { margin-left: 0; }
+        }
+
+        /* Toast notification */
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
+        .toast-enter { animation: toastIn 0.35s ease-out forwards; }
+        .toast-exit { animation: toastOut 0.3s ease-in forwards; }
+
+        /* Leaflet Map Styles */
+        #live-map {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+        }
+        .leaflet-container {
+            background: #0A0A0F;
+        }
+        /* Leaflet popup dark theme */
+        .leaflet-popup-content-wrapper { background: #1f1f25 !important; color: #fff !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; border: 1px solid rgba(255,255,255,0.05) !important; }
+        .leaflet-popup-tip { background: #1f1f25 !important; }
+        .leaflet-popup-close-button { color: #fff6 !important; }
+        .leaflet-popup-close-button:hover { color: #fff !important; }
+
+        /* Leaflet tooltip dark theme */
+        .custom-tooltip {
+            background: #1f1f25 !important;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .custom-tooltip::before {
+            border-top-color: #1f1f25 !important;
+        }
+
+        /* Prebook Modal Styles */
+        .prebook-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .prebook-modal-box {
+            background: #1f1f25;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .prebook-modal-box h3 {
+            font-family: 'Michroma', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+        .prebook-modal-box p {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        .prebook-modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .prebook-cancel-btn,
+        .prebook-confirm-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'Michroma', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .prebook-cancel-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .prebook-cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .prebook-confirm-btn {
+            background: #CCFF00;
+            border: none;
+            color: #131318;
+        }
+        .prebook-confirm-btn:hover {
+            background: #BFFF00;
+            box-shadow: 0 0 15px rgba(191, 255, 0, 0.3);
+        }
+
+        /* Leaflet Routing Machine Dark Theme */
+        .leaflet-routing-container {
+            background: #1f1f25 !important;
+            color: #fff !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+        .leaflet-routing-collapse-btn {
+            background: #1f1f25 !important;
+            color: #fff !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-routing-geocoders .leaflet-routing-geocoder {
+            background: #2a2a30 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+        }
+        .leaflet-routing-geocoders .leaflet-routing-geocoder input {
+            background: #2a2a30 !important;
+            color: #fff !important;
+            border: none !important;
+        }
+        .leaflet-routing-geocoders .leaflet-routing-geocoder-result {
+            background: #2a2a30 !important;
+            color: #fff !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-routing-geocoders .leaflet-routing-geocoder-result:hover {
+            background: #3a3a40 !important;
+        }
+        .leaflet-routing-instructions {
+            background: #1f1f25 !important;
+            color: #fff !important;
+        }
+        .leaflet-routing-instruction {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        .leaflet-routing-error {
+            background: #3a1a1a !important;
+            color: #ff6b6b !important;
+        }
+    </style>
+</head>
+
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen overflow-x-hidden">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none w-80"></div>
+
+    <div class="flex min-h-screen">
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="gp-sidebar" id="main-sidebar">
+            <div class="gp-sidebar__logo-zone">
+                <div class="gp-sidebar__logo-mark">
+                    <img src="assets/gridpulz_logo.png" alt="GridPulz Logo" class="w-8 h-8 object-contain">
+                </div>
+                <div class="gp-sidebar__brand">GridPulz</div>
+            </div>
+            <nav class="gp-sidebar__nav">
+                <span class="gp-sidebar__sec-label">Main</span>
+                <a href="user-dashboard.html" class="gp-sidebar__nav-item" data-page="user-dashboard">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/dashboard.png" alt="Dashboard"></span>
+                    <span class="gp-sidebar__nav-label">Dashboard</span>
+                </a>
+                <a href="charge-now.html" class="gp-sidebar__nav-item active" data-page="charge-now">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/chargenow.png" alt="Charge Now"></span>
+                    <span class="gp-sidebar__nav-label">Charge Now</span>
+                </a>
+                <a href="prebook.html" class="gp-sidebar__nav-item" data-page="prebook">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/prebook.png" alt="Prebook"></span>
+                    <span class="gp-sidebar__nav-label">Prebook</span>
+                </a>
+                <a href="station-map.html" class="gp-sidebar__nav-item" data-page="station-map">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/map.png" alt="Station Map"></span>
+                    <span class="gp-sidebar__nav-label">Station Map</span>
+                </a>
+                <span class="gp-sidebar__sec-label">Config</span>
+                <a href="my-bookings.html" class="gp-sidebar__nav-item" data-page="my-bookings">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/mybookings.png" alt="My Bookings"></span>
+                    <span class="gp-sidebar__nav-label">My Bookings</span>
+                </a>
+                <a href="settings.html" class="gp-sidebar__nav-item" data-page="settings">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/settings.png" alt="Settings"></span>
+                    <span class="gp-sidebar__nav-label">Settings</span>
+                </a>
+            </nav>
+            <div class="gp-sidebar__separator"></div>
+            <div class="gp-sidebar__logout-zone">
+                <button class="gp-sidebar__nav-item logout" id="logout-btn">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/logout.png" alt="Logout"></span>
+                    <span class="gp-sidebar__nav-label">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============ MAIN CONTENT ============ -->
+        <main id="main-content" class="flex-1 relative dot-grid">
+            <div
+                class="absolute top-0 left-1/3 w-[600px] h-[600px] bg-neon opacity-[0.015] blur-[120px] rounded-full pointer-events-none">
+            </div>
+
+            <div class="max-w-6xl mx-auto p-6 md:p-10 space-y-6">
+                <!-- Page Title -->
+                <div class="fade-up flex items-center gap-4">
+                    <a href="user-dashboard.html"
+                        class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                    <div>
+                        <h1 class="font-headline text-2xl font-bold text-white">Charge Now</h1>
+                    </div>
+                </div>
+
+                <!-- ===== TAB 1: CHARGE NOW ===== -->
+                <div id="tab-content-charge" class="fade-up fade-up-d3 space-y-6">
+
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 max-w-5xl">
+                        <!-- Left Panel: Controls (Col Span 2) -->
+                        <div
+                            class="lg:col-span-2 glass-card rounded-2xl border border-white/5 p-6 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 mb-6">
+                                    <span class="material-symbols-outlined text-neon text-xl">bolt</span>
+                                    <h2 class="font-headline font-bold text-sm uppercase tracking-widest text-white">
+                                        Immediate Allocation</h2>
+                                </div>
+
+                                <!-- SoC Slider -->
+                                <div class="mb-6 bg-white/[0.02] p-5 rounded-xl border border-white/5">
+                                    <label class="flex justify-between items-end mb-4">
+                                        <span
+                                            class="text-[10px] uppercase tracking-widest text-on-surface-variant/60 font-bold">Current
+                                            SoC%</span>
+                                        <span id="soc-value"
+                                            class="text-3xl font-mono font-bold text-neon shadow-neon drop-shadow-md">72<span
+                                                class="text-lg text-neon/50">%</span></span>
+                                    </label>
+                                    <input type="range" id="soc-slider" min="0" max="100" value="72"
+                                        class="w-full cursor-pointer h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full appearance-none outline-none">
+                                </div>
+
+                                <!-- GPS location -->
+                                <div
+                                    class="flex items-center gap-2 p-3 rounded-lg bg-white/[0.03] border border-white/5 mb-6">
+                                    <span
+                                        class="material-symbols-outlined text-on-surface-variant/40 text-sm">my_location</span>
+                                    <span id="current-location"
+                                        class="text-[10px] uppercase font-mono tracking-widest text-on-surface-variant/60 flex-1">Looking
+                                        for GPS...</span>
+                                    <button id="gps-btn"
+                                        class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/5 border border-white/10 text-[9px] font-headline font-bold uppercase tracking-widest text-neon hover:bg-neon/10 hover:border-neon/30 transition-all active:scale-95">
+                                        <span class="material-symbols-outlined text-[10px]">gps_fixed</span> GPS
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Selected Station Card (hidden by default) -->
+                            <div id="selected-station-card" class="hidden mb-4 p-4 rounded-xl bg-neon/5 border border-neon/20">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] uppercase tracking-widest text-neon font-bold">Selected Station</span>
+                                    <span id="selected-station-info" class="text-[10px] text-white/60 font-mono"></span>
+                                </div>
+                                <h3 id="selected-station-name" class="font-headline font-bold text-white text-sm"></h3>
+                            </div>
+
+                            <button id="request-slot-btn"
+                                class="w-full bg-neon text-[#161e00] font-headline font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-neon/90 hover:shadow-[0_0_20px_rgba(191,255,0,0.3)] transition-all flex items-center justify-center gap-2 active:scale-95 group mt-4">
+                                Request Charging Slot
+                                <span
+                                    class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                            </button>
+                        </div>
+
+                        <!-- Right Panel: Dynamic Map (Col Span 3) -->
+                        <div
+                            class="lg:col-span-3 glass-card rounded-2xl border border-white/5 p-0 overflow-hidden relative min-h-[350px]">
+                            <div
+                                class="absolute top-4 left-4 z-10 glass-card px-3 py-1.5 rounded text-[10px] uppercase tracking-widest text-white/90 border border-white/10 font-bold shadow-xl flex items-center gap-2 pointer-events-none">
+                                <span class="material-symbols-outlined text-[14px] text-neon">public</span> Live Grid
+                                Map
+                            </div>
+                            <!-- Realtime Connection Status -->
+                            <div id="rt-status"
+                                class="hidden absolute top-4 right-4 z-10 glass-card px-3 py-1.5 rounded border border-white/10 shadow-xl flex items-center gap-2 pointer-events-none">
+                                <span class="rt-dot"
+                                    style="width:6px;height:6px;border-radius:50%;background:#6b7280;"></span>
+                                <span class="rt-label text-[8px] uppercase tracking-[2px] font-bold text-white/60"
+                                    style="font-family:'Space Grotesk',sans-serif;">OFFLINE</span>
+                            </div>
+                            <div id="live-map" class="absolute inset-0 z-0 bg-[#0B0B12]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Grid Safeguard Reroute Alert Banner -->
+                    <div id="reroute-alert"
+                        class="hidden glass-card rounded-2xl border border-red-500/20 bg-red-500/[0.03] p-5 max-w-5xl overflow-hidden relative"
+                        style="animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                        <!-- Dynamic content injected by dashboard.js -->
+                    </div>
+
+                    <!-- Result Status Card -->
+                    <div id="booking-result"
+                        class="hidden glass-card rounded-2xl border border-white/5 p-6 max-w-3xl overflow-hidden relative">
+                        <!-- Dynamic content injected here by dashboard.js -->
+                    </div>
+
+                </div>
+
+                <!-- ===== TAB 2: PREBOOK SLOTS ===== -->
+                <!-- ===== TAB 3: STATION MAP ===== -->
+        </main>
+    </div>
+
+
+    <!-- Confirm Booking Modal -->
+    <div id="confirm-booking-modal"
+        class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div
+            class="glass-card rounded-2xl border border-white/10 p-6 w-full max-w-sm fade-up shadow-2xl relative overflow-hidden">
+            <div
+                class="absolute top-0 right-0 w-32 h-32 bg-neon/10 rounded-full blur-2xl pointer-events-none -mr-10 -mt-10">
+            </div>
+            <h3 class="font-headline font-bold text-white text-lg flex items-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-neon">help_center</span> Confirm Request
+            </h3>
+            <p class="text-xs text-on-surface-variant/70 font-body mb-6">
+                Are you sure you want to request an immediate charging slot?
+            </p>
+            <div class="flex items-center gap-3 w-full">
+                <button id="modal-cancel-btn"
+                    class="flex-1 py-2.5 rounded-lg border border-white/10 text-xs font-bold text-white/70 hover:bg-white/5 transition-colors">Cancel</button>
+                <button id="modal-confirm-btn"
+                    class="flex-1 py-2.5 rounded-lg bg-neon text-[#131318] text-xs font-bold shadow-[0_0_15px_rgba(191,255,0,0.2)] hover:bg-neon/90 transition-all font-headline uppercase tracking-widest">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/stations-realtime.js"></script>
+    <script src="js/charge-now.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="components/sidebar.js"></script>
+</body>
+
+</html>

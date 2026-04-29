@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GridPulz | User Dashboard</title>
+    <!-- Leaflet CSS and JS (OpenStreetMap - Free, no API key needed) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="components/top-nav-enhancements.css">
+    <link rel="stylesheet" href="components/font-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Mulish:wght@400;500;600;700&family=Josefin+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="components/font-theme.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#35343a",
+                        "on-surface-variant": "#c3caac",
+                        "surface-dim": "#131318",
+                        "primary-fixed": "#b8f600",
+                        "on-background": "#e4e1e9",
+                        "on-surface": "#e4e1e9",
+                        "outline": "#8d9479",
+                        "background": "#131318",
+                        "error": "#ffb4ab",
+                        "surface": "#131318",
+                        "surface-container": "#1f1f25",
+                        "neon": "#BFFF00",
+                    },
+                    fontFamily: {
+                        "headline": ["Michroma", "monospace"],
+                        "body": ["Josefin Sans", "sans-serif"],
+                        "mono": ["Michroma", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-main: #131313;
+            --bg-surface: #1A1A1A;
+            --bg-elevated: #1b1b1b;
+            --border: #353535;
+            --accent-green: #CCFF00;
+            --accent-red: #FF4444;
+            --text-primary: #FFFFFF;
+            --text-secondary: #b0b0b0;
+        }
+        body { font-family: 'Josefin Sans', sans-serif !important; background-color: var(--bg-main); color: var(--text-primary); display: flex; flex-direction: column; min-height: 100vh; }
+        .brand-logo, h1, .metric-number, .stat-val { font-family: 'Michroma', sans-serif !important; }
+        /* Sidebar responsive margin */
+        #main-content { 
+            flex: 1; 
+            padding: 16px; 
+            margin-left: 68px; 
+            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gp-sidebar.expanded + #main-content {
+            margin-left: 220px;
+        }
+        @media (max-width: 1024px) {
+            #main-content { margin-left: 0; }
+            .gp-sidebar.expanded + #main-content { margin-left: 0; }
+        }
+        .mobile-card { border-radius: 16px; background: var(--bg-surface); border: 1px solid var(--border); padding: 20px; margin-bottom: 12px; width: 100%; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(184, 246, 0, 0.06) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .glass-card {
+            background: rgba(31, 31, 37, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        @keyframes pulse-glow {
+            0%   { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0.4); }
+            70%  { box-shadow: 0 0 0 8px rgba(191, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0); }
+        }
+        .status-pulse { animation: pulse-glow 2s infinite; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
+        .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
+        .fade-up-d3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* SoC slider */
+        input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px; border-radius: 4px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #BFFF00 70%, #22c55e 100%);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #BFFF00; border: 3px solid #0A0A0F;
+            margin-top: -7px; cursor: pointer;
+            box-shadow: 0 0 10px rgba(191,255,0,0.5);
+        }
+        input[type="range"]::-moz-range-track {
+            height: 8px; border-radius: 4px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #BFFF00 70%, #22c55e 100%);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #BFFF00; border: 3px solid #0A0A0F;
+            cursor: pointer; box-shadow: 0 0 10px rgba(191,255,0,0.5);
+        }
+        .nav-link-active { background: rgba(191,255,0,0.1); border-color: rgba(191,255,0,0.3); color: #BFFF00; }
+
+        /* Toast notification */
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(100%); }
+        }
+        .toast-enter { animation: toastIn 0.35s ease-out forwards; }
+        .toast-exit  { animation: toastOut 0.3s ease-in forwards; }
+
+        /* Leaflet popup dark theme */
+        .leaflet-popup-content-wrapper { background: #1f1f25 !important; color: #fff !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; border: 1px solid rgba(255,255,255,0.05) !important; }
+        .leaflet-popup-tip { background: #1f1f25 !important; }
+        .leaflet-popup-close-button { color: #fff6 !important; }
+        .leaflet-popup-close-button:hover { color: #fff !important; }
+    </style>
+</head>
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen overflow-x-auto">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none w-80"></div>
+
+    <div class="flex min-h-screen">
+        <!-- ============ NEW SIDEBAR COMPONENT ============ -->
+        <aside class="gp-sidebar" id="main-sidebar">
+            <div class="gp-sidebar__logo-zone">
+                <div class="gp-sidebar__logo-mark">
+                    <img src="assets/gridpulz_logo.png" alt="GridPulz Logo" class="w-8 h-8 object-contain">
+                </div>
+                <div class="gp-sidebar__brand">GridPulz</div>
+            </div>
+            <nav class="gp-sidebar__nav">
+                <span class="gp-sidebar__sec-label">Main</span>
+                <a href="user-dashboard.html" class="gp-sidebar__nav-item" data-page="user-dashboard">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/dashboard.png" alt="Dashboard"></span>
+                    <span class="gp-sidebar__nav-label">Dashboard</span>
+                </a>
+                <a href="charge-now.html" class="gp-sidebar__nav-item" data-page="charge-now">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/chargenow.png" alt="Charge Now"></span>
+                    <span class="gp-sidebar__nav-label">Charge Now</span>
+                </a>
+                <a href="prebook.html" class="gp-sidebar__nav-item" data-page="prebook">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/prebook.png" alt="Prebook"></span>
+                    <span class="gp-sidebar__nav-label">Prebook</span>
+                </a>
+                <a href="station-map.html" class="gp-sidebar__nav-item" data-page="station-map">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/map.png" alt="Station Map"></span>
+                    <span class="gp-sidebar__nav-label">Station Map</span>
+                </a>
+                <span class="gp-sidebar__sec-label">Config</span>
+                <a href="my-bookings.html" class="gp-sidebar__nav-item" data-page="my-bookings">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/mybookings.png" alt="My Bookings"></span>
+                    <span class="gp-sidebar__nav-label">My Bookings</span>
+                </a>
+                <a href="settings.html" class="gp-sidebar__nav-item" data-page="settings">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/settings.png" alt="Settings"></span>
+                    <span class="gp-sidebar__nav-label">Settings</span>
+                </a>
+            </nav>
+            <div class="gp-sidebar__separator"></div>
+            <div class="gp-sidebar__logout-zone">
+                <button class="gp-sidebar__nav-item logout" id="logout-btn">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/logout.png" alt="Logout"></span>
+                    <span class="gp-sidebar__nav-label">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============ MAIN CONTENT ============ -->
+        <main id="main-content" class="flex-1 relative dot-grid responsive-content">
+            <div class="absolute top-0 left-1/3 w-[600px] h-[600px] bg-neon opacity-[0.015] blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div class="max-w-6xl mx-auto p-6 p-10 space-y-6">
+                <!-- Page Title -->
+                <div class="fade-up">
+                    <h1 class="font-headline text-2xl font-bold text-white">Driver Command Center</h1>
+                    <p class="text-xs text-on-surface-variant/60 mt-1">Monitor your EV, update your charge state, and discover grid-optimized stations.</p>
+                </div>
+
+                <!-- ===== ROW 1: My Vehicle + Current Status ===== -->
+                <div class="grid grid-cols-2 gap-6">
+
+                    <!-- FEATURE 1: MY VEHICLE -->
+                    <div class="glass-card rounded-2xl border border-white/5 p-6 fade-up fade-up-d1 relative">
+                        <div class="flex items-center gap-2 mb-5">
+                            <span class="material-symbols-outlined text-neon text-lg">electric_car</span>
+                            <h2 class="font-headline font-bold text-xs uppercase tracking-widest text-white">My Vehicle</h2>
+                            
+                            <!-- Edit/Save Buttons -->
+                            <button id="btn-edit-profile" class="ml-2 px-2 py-1 bg-white/5 border border-white/10 rounded text-[9px] uppercase tracking-widest text-on-surface-variant hover:text-white transition-colors">Edit</button>
+                            <button id="btn-save-profile" class="hidden ml-2 px-2 py-1 bg-neon/10 border border-neon/30 rounded text-[9px] font-bold uppercase tracking-widest text-neon hover:bg-neon hover:text-[#161e00] transition-colors">Save</button>
+
+                            <div class="ml-auto flex items-center gap-1.5">
+                                <div class="w-2 h-2 rounded-full bg-neon status-pulse"></div>
+                                <span class="text-[9px] uppercase tracking-widest text-neon/70 font-bold">Online</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3" id="profile-fields-container">
+                            <div class="flex items-center justify-between p-3.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-on-surface-variant/40 text-sm">directions_car</span>
+                                    <span class="text-[10px] uppercase tracking-widest text-on-surface-variant/60">Vehicle</span>
+                                </div>
+                                <div class="flex-1 max-w-[200px] text-right">
+                                    <span id="vehicle-name" class="text-sm font-headline font-semibold text-white truncate inline-block w-full profile-view">—</span>
+                                    <input type="text" id="edit-vehicle-name" class="hidden w-full bg-[#1A1A24] border border-white/10 rounded px-2 py-1 text-white text-xs focus:border-neon focus:ring-1 focus:ring-neon font-mono text-right profile-edit">
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-on-surface-variant/40 text-sm">battery_charging_full</span>
+                                    <span class="text-[10px] uppercase tracking-widest text-on-surface-variant/60">Battery Capacity</span>
+                                </div>
+                                <div class="flex-1 max-w-[120px] text-right flex justify-end items-center gap-2">
+                                    <span id="vehicle-capacity" class="text-sm font-mono font-semibold text-neon profile-view">— kWh</span>
+                                    <input type="number" id="edit-vehicle-capacity" class="hidden w-20 bg-[#1A1A24] border border-white/10 rounded px-2 py-1 text-neon text-xs focus:border-neon focus:ring-1 focus:ring-neon font-mono text-right profile-edit">
+                                    <span class="text-xs text-on-surface-variant/60 hidden profile-edit">kWh</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-on-surface-variant/40 text-sm">electrical_services</span>
+                                    <span class="text-[10px] uppercase tracking-widest text-on-surface-variant/60">Charging Type</span>
+                                </div>
+                                <div class="flex-1 max-w-[150px] text-right">
+                                    <span id="vehicle-charging-type" class="text-sm font-headline font-semibold text-white profile-view">—</span>
+                                    <select id="edit-vehicle-charging-type" class="hidden w-full bg-[#1A1A24] border border-white/10 rounded px-2 py-1 text-white text-xs focus:border-neon focus:ring-1 focus:ring-neon font-mono text-right profile-edit">
+                                        <option value="Type 2">Type 2</option>
+                                        <option value="CCS">CCS</option>
+                                        <option value="CHAdeMO">CHAdeMO</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-3.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-on-surface-variant/40 text-sm">mail</span>
+                                    <span class="text-[10px] uppercase tracking-widest text-on-surface-variant/60">Email</span>
+                                </div>
+                                <span id="vehicle-email" class="text-xs font-body text-on-surface-variant/80 truncate max-w-[180px]">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FEATURE 2: CURRENT STATUS (SoC + GPS + Discovery) -->
+                </div>
+
+                <!-- ===== ACTION HUB ===== -->
+                <div class="grid grid-cols-3 gap-6 mt-10 fade-up fade-up-d2">
+                    
+                    <a href="charge-now.html" class="glass-card rounded-2xl border border-neon/20 hover:border-neon p-6 group transition-all hover:shadow-[0_0_30px_rgba(191,255,0,0.15)] flex flex-col justify-between min-h-[220px] relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-neon/5 rounded-full blur-2xl group-hover:bg-neon/10 transition-colors"></div>
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-neon/10 border border-neon/30 flex items-center justify-center text-neon">
+                                    <span class="material-symbols-outlined">bolt</span>
+                                </div>
+                                <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-neon">Action 01</span>
+                            </div>
+                            <h2 class="font-headline font-bold text-lg text-white mb-2">Charge Now</h2>
+                            <p class="text-xs text-on-surface-variant/60">Find the nearest optimal station based on live grid health and battery capacity.</p>
+                        </div>
+                        <div class="flex items-center text-xs font-bold uppercase tracking-widest text-white/50 group-hover:text-neon transition-colors mt-6">
+                            Proceed <span class="material-symbols-outlined text-sm ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </div>
+                    </a>
+
+                    <a href="prebook.html" class="glass-card rounded-2xl border border-white/10 hover:border-emerald-500/50 p-6 group transition-all hover:bg-emerald-500/5 flex flex-col justify-between min-h-[220px] relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                                    <span class="material-symbols-outlined">event_available</span>
+                                </div>
+                                <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400">Action 02</span>
+                            </div>
+                            <h2 class="font-headline font-bold text-lg text-white mb-2">Prebook Slot</h2>
+                            <p class="text-xs text-on-surface-variant/60">Schedule future charging sessions safely avoiding grid bottlenecks.</p>
+                        </div>
+                        <div class="flex items-center text-xs font-bold uppercase tracking-widest text-white/50 group-hover:text-emerald-400 transition-colors mt-6">
+                            Proceed <span class="material-symbols-outlined text-sm ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </div>
+                    </a>
+
+                    <a href="station-map.html" class="glass-card rounded-2xl border border-white/10 hover:border-blue-500/50 p-6 group transition-all hover:bg-blue-500/5 flex flex-col justify-between min-h-[220px] relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors"></div>
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                                    <span class="material-symbols-outlined">map</span>
+                                </div>
+                                <span class="text-[10px] font-mono font-bold uppercase tracking-widest text-blue-400">Action 03</span>
+                            </div>
+                            <h2 class="font-headline font-bold text-lg text-white mb-2">Station Map</h2>
+                            <p class="text-xs text-on-surface-variant/60">Visualize current network congestion and station proximity.</p>
+                        </div>
+                        <div class="flex items-center text-xs font-bold uppercase tracking-widest text-white/50 group-hover:text-blue-400 transition-colors mt-6">
+                            Proceed <span class="material-symbols-outlined text-sm ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </div>
+                    </a>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/stations-realtime.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="components/sidebar.js"></script>
+</body>
+</html>
+
+
+
+

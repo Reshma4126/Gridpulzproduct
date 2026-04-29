@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GRIDPULZ | Features</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-secondary": "#003824",
+              "secondary-fixed": "#47ffb8",
+              "on-error": "#690005",
+              "secondary-fixed-dim": "#00e29e",
+              "inverse-primary": "#4b6700",
+              "surface-container-high": "#2a292f",
+              "inverse-surface": "#e4e1e9",
+              "tertiary": "#ffffff",
+              "on-primary-fixed": "#141f00",
+              "primary-container": "#b8f600",
+              "primary": "#ffffff",
+              "on-secondary-fixed": "#002114",
+              "error": "#ffb4ab",
+              "surface": "#131318",
+              "on-surface": "#e4e1e9",
+              "on-primary-container": "#506e00",
+              "on-tertiary-container": "#586676",
+              "secondary": "#6cffbf",
+              "on-surface-variant": "#c3caac",
+              "primary-fixed": "#b8f600",
+              "on-secondary-container": "#006141",
+              "error-container": "#93000a",
+              "on-primary": "#263500",
+              "surface-container-low": "#1b1b20",
+              "surface-bright": "#39383e",
+              "primary-fixed-dim": "#a1d800",
+              "on-background": "#e4e1e9",
+              "surface-container-lowest": "#0e0e13",
+              "tertiary-fixed": "#d6e4f7",
+              "on-tertiary": "#243240",
+              "surface-dim": "#131318",
+              "surface-container": "#1f1f25",
+              "outline-variant": "#434933",
+              "tertiary-fixed-dim": "#bac8da",
+              "surface-variant": "#35343a",
+              "on-error-container": "#ffdad6",
+              "on-secondary-fixed-variant": "#005236",
+              "on-tertiary-fixed": "#0f1d2a",
+              "on-tertiary-fixed-variant": "#3b4857",
+              "on-primary-fixed-variant": "#384e00",
+              "tertiary-container": "#d6e4f7",
+              "outline": "#8d9479",
+              "secondary-container": "#00e5a0",
+              "inverse-on-surface": "#303036",
+              "background": "#131318",
+              "surface-container-highest": "#35343a",
+              "surface-tint": "#a1d800"
+            },
+            fontFamily: {
+                            "headline": ["Michroma"],
+                            "body": ["Michroma"],
+                            "label": ["Michroma"],
+                            "industrial": ["Michroma"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body, body *:not(.material-symbols-outlined) {
+            font-family: 'Michroma', sans-serif !important;
+        }
+        html { scroll-behavior: smooth; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .dot-grid {
+            background-image: radial-gradient(circle, #434933 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .glass-card {
+            background: rgba(14, 14, 19, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(191, 255, 0, 0.1);
+        }
+        .glass-card:hover {
+            border-color: #BFFF00;
+            box-shadow: 0 0 30px rgba(191, 255, 0, 0.15);
+            transform: translateY(-5px);
+        }
+
+        /* Scroll reveal animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal-scale.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .stagger-1 { transition-delay: 0.1s; }
+        .stagger-2 { transition-delay: 0.2s; }
+        .stagger-3 { transition-delay: 0.3s; }
+        .stagger-4 { transition-delay: 0.4s; }
+        .stagger-5 { transition-delay: 0.5s; }
+        .stagger-6 { transition-delay: 0.6s; }
+
+        /* Navbar scroll state */
+        nav.scrolled {
+            background: rgba(19, 19, 24, 0.92) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 1px 0 rgba(191, 255, 0, 0.08);
+        }
+
+        /* Hero text entrance */
+        .hero-text-line {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: heroReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .hero-text-line:nth-child(1) { animation-delay: 0.2s; }
+        .hero-text-line:nth-child(2) { animation-delay: 0.4s; }
+        .hero-fade {
+            opacity: 0;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards;
+        }
+        @keyframes heroReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        /* Pulse glow */
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0.4); }
+            50% { box-shadow: 0 0 20px 5px rgba(191, 255, 0, 0.15); }
+        }
+
+        /* Active nav link hover */
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px;
+            background: #BFFF00; transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+        .nav-link.active::after { width: 100%; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed min-w-[1440px] overflow-x-auto">
+<!-- TopAppBar -->
+<nav id="navbar" class="bg-[#131318]/80 backdrop-blur-md top-0 sticky z-50 transition-all duration-300 shadow-[0_0_40px_rgba(191,255,0,0.08)]">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="flex items-center">
+            <a href="index.html"><img alt="GridPulz Logo" class="h-32 w-auto mix-blend-lighten" src="assets/gridpulz_logo.png"/></a>
+        </div>
+        <div class="flex items-center gap-10">
+            <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#FFFFFF] transition-colors" href="index.html#hero">Home</a>
+            <a class="font-body text-sm uppercase tracking-widest text-[#BFFF00] font-bold border-b-2 border-[#BFFF00] pb-1" href="features.html">Features</a>
+            <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#FFFFFF] transition-colors" href="login.html">Dashboard</a>
+            <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#FFFFFF] transition-colors" href="index.html#about">About</a>
+            <a class="font-body text-sm uppercase tracking-widest text-[#C3CAAC] hover:text-[#FFFFFF] transition-colors" href="index.html#cta">Contact</a>
+        </div>
+        <a href="login.html" onclick="handleGetStarted(event)" class="bg-primary-container text-on-primary-fixed font-headline font-bold px-6 py-2 rounded-lg active:scale-90 transition-all hover:bg-[#BFFF00]/90 hover:shadow-[0_0_15px_rgba(191,255,0,0.3)]">
+            GET STARTED
+        </a>
+    </div>
+</nav>
+<main class="relative overflow-hidden pt-20">
+<!-- Background Decor -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1000px] pointer-events-none z-0">
+<div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#BFFF00] opacity-[0.03] blur-[150px] rounded-full"></div>
+<div class="absolute top-[10%] right-[-5%] w-[40%] h-[40%] bg-secondary opacity-[0.02] blur-[120px] rounded-full"></div>
+<div class="dot-grid absolute inset-0 opacity-20"></div>
+</div>
+<!-- Hero Section -->
+<section class="relative z-10 pt-24 pb-32 px-8 max-w-7xl mx-auto text-center"><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] pointer-events-none -z-10">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#39FF14] opacity-20 blur-[180px] rounded-full"></div>
+<div class="absolute top-20 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-[#39FF14] opacity-10 blur-[120px] rounded-full"></div>
+</div>
+<div class="hero-fade inline-flex items-center gap-2 px-3 py-1 bg-surface-container-low border border-outline-variant/30 mb-8">
+<span class="w-2 h-2 rounded-full bg-primary-fixed animate-pulse"></span>
+<span class="text-xs font-label uppercase tracking-[0.2em] text-on-surface-variant">Grid Management v4.0 Active</span>
+</div>
+<h1 class="font-industrial text-4xl text-6xl text-7xl text-white mb-8 leading-tight tracking-tighter">
+                <span class="hero-text-line block">Unlock the Power of AI for</span> <br class="block"/> <span class="hero-text-line text-primary-fixed block">Next-Gen Energy Grids</span>
+</h1>
+<p class="hero-fade max-w-2xl mx-auto text-on-surface-variant text-lg text-xl mb-12 leading-relaxed">
+                AI-powered intelligence layer for EV charging networks — optimizing load, preventing overload, and guiding users smarter.
+            </p>
+<div class="hero-fade flex flex-row items-center justify-center gap-6">
+<button onclick="handleGetStarted(event)" class="pulse-glow bg-primary-fixed text-on-primary-fixed px-10 py-5 font-headline font-black uppercase tracking-widest hover:opacity-90 transition-all rounded">
+                    Get Started
+                </button>
+<button class="group flex items-center gap-3 px-8 py-5 border border-outline-variant hover:border-primary-fixed transition-colors hover:bg-white/5 rounded">
+<span class="font-headline font-bold uppercase tracking-widest text-white">System Overview</span>
+<span class="material-symbols-outlined text-[#BFFF00] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Main Features Grid -->
+<section class="relative z-10 py-24 px-8 max-w-7xl mx-auto">
+<div class="flex flex-row justify-between items-end mb-16 gap-8">
+<div class="reveal max-w-xl">
+<h2 class="font-industrial text-3xl text-white mb-4 uppercase tracking-tighter">Core Infrastructure</h2>
+<div class="h-1 w-24 bg-primary-fixed"></div>
+</div>
+<p class="reveal text-on-surface-variant font-body uppercase tracking-widest text-sm">Industrial Grade Intelligence</p>
+</div>
+<div class="grid grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="reveal stagger-1 glass-card p-10 transition-all duration-500 group rounded-xl">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-8 block" style="font-variation-settings: 'FILL' 0;">query_stats</span>
+<h3 class="font-industrial text-xl text-white mb-4 uppercase leading-tight">Real-Time Load Monitoring</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Continuous high-fidelity surveillance of grid distribution across all connected nodes with microsecond latency.</p>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary-fixed font-headline font-bold uppercase text-xs tracking-widest">
+                        Explore Metrics <span class="material-symbols-outlined text-sm">north_east</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="reveal stagger-2 glass-card p-10 transition-all duration-500 group rounded-xl">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-8 block" style="font-variation-settings: 'FILL' 0;">psychology</span>
+<h3 class="font-industrial text-xl text-white mb-4 uppercase leading-tight">AI-Based Load Prediction</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Neural networks analyze historical patterns to forecast surges and dips before they impact the network integrity.</p>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary-fixed font-headline font-bold uppercase text-xs tracking-widest">
+                        Model Accuracy <span class="material-symbols-outlined text-sm">north_east</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="reveal stagger-3 glass-card p-10 transition-all duration-500 group rounded-xl">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-8 block" style="font-variation-settings: 'FILL' 0;">ev_station</span>
+<h3 class="font-industrial text-xl text-white mb-4 uppercase leading-tight">Smart Station Recommendation</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Dynamic routing for users based on current grid health, proximity, and predicted availability of charging points.</p>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary-fixed font-headline font-bold uppercase text-xs tracking-widest">
+                        User Optimization <span class="material-symbols-outlined text-sm">north_east</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="reveal stagger-4 glass-card p-10 transition-all duration-500 group rounded-xl">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-8 block" style="font-variation-settings: 'FILL' 0;">calendar_month</span>
+<h3 class="font-industrial text-xl text-white mb-4 uppercase leading-tight">Intelligent Scheduling System</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Automated slot management that balances peak consumption with low-demand windows for maximum efficiency.</p>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary-fixed font-headline font-bold uppercase text-xs tracking-widest">
+                        Capacity Mgmt <span class="material-symbols-outlined text-sm">north_east</span>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="reveal stagger-5 glass-card p-10 transition-all duration-500 group rounded-xl">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-8 block" style="font-variation-settings: 'FILL' 0;">hub</span>
+<h3 class="font-industrial text-xl text-white mb-4 uppercase leading-tight">Multi-Station Coordination</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Seamless synchronization between geographically distributed clusters to prevent local transformer overload.</p>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary-fixed font-headline font-bold uppercase text-xs tracking-widest">
+                        Network Mesh <span class="material-symbols-outlined text-sm">north_east</span>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="reveal stagger-6 glass-card p-10 transition-all duration-500 group rounded-xl">
+<span class="material-symbols-outlined text-primary-fixed text-4xl mb-8 block" style="font-variation-settings: 'FILL' 0;">settings_input_component</span>
+<h3 class="font-industrial text-xl text-white mb-4 uppercase leading-tight">IoT-Based Edge Integration</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Direct hardware interfacing with sensors and meters for direct control and rapid response at the edge.</p>
+<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity text-primary-fixed font-headline font-bold uppercase text-xs tracking-widest">
+                        Edge Protocols <span class="material-symbols-outlined text-sm">north_east</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Features Grid -->
+<section class="relative z-10 py-32 px-8 max-w-7xl mx-auto bg-surface-container-lowest/50"><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#39FF14] opacity-[0.03] blur-[120px] pointer-events-none rounded-full"></div>
+<div class="reveal text-center mb-20">
+<h2 class="font-industrial text-3xl text-white mb-4 uppercase tracking-tighter">Advanced Modules</h2>
+<p class="text-on-surface-variant uppercase tracking-widest text-sm">Secondary Support Systems</p>
+</div>
+<div class="grid grid-cols-2 gap-px bg-[#39FF14]/10">
+<!-- Small Card 1 -->
+<div class="reveal stagger-1 bg-surface p-12 border-outline-variant/10 hover:-translate-y-1 transition-all border border-[#39FF14]/10">
+<div class="flex items-start gap-6">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container border border-primary-fixed/20">
+<span class="material-symbols-outlined text-[#39FF14]" style="text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);">analytics</span>
+</div>
+<div>
+<h4 class="font-industrial text-lg text-white mb-3 uppercase tracking-tighter">Advanced Analytics</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Deep-dive reporting engine for stakeholder visibility and grid optimization auditing.</p>
+</div>
+</div>
+</div>
+<!-- Small Card 2 -->
+<div class="reveal stagger-2 bg-surface p-12 border-outline-variant/10 hover:-translate-y-1 transition-all border border-[#39FF14]/10">
+<div class="flex items-start gap-6">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container border border-primary-fixed/20">
+<span class="material-symbols-outlined text-[#39FF14]" style="text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);">notification_important</span>
+</div>
+<div>
+<h4 class="font-industrial text-lg text-white mb-3 uppercase tracking-tighter">Smart Alerts</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Configurable threshold notifications with automated escalation protocols via SMS and API.</p>
+</div>
+</div>
+</div>
+<!-- Small Card 3 -->
+<div class="reveal stagger-3 bg-surface p-12 border-outline-variant/10 hover:-translate-y-1 transition-all border border-[#39FF14]/10">
+<div class="flex items-start gap-6">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container border border-primary-fixed/20">
+<span class="material-symbols-outlined text-[#39FF14]" style="text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);">cloud_sync</span>
+</div>
+<div>
+<h4 class="font-industrial text-lg text-white mb-3 uppercase tracking-tighter">Cloud-Connected</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Unified control plane accessible from any terminal with military-grade encryption standards.</p>
+</div>
+</div>
+</div>
+<!-- Small Card 4 -->
+<div class="reveal stagger-4 bg-surface p-12 border-outline-variant/10 hover:-translate-y-1 transition-all border border-[#39FF14]/10">
+<div class="flex items-start gap-6">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container border border-primary-fixed/20">
+<span class="material-symbols-outlined text-[#39FF14]" style="text-shadow: 0 0 10px rgba(57, 255, 20, 0.5);">dynamic_form</span>
+</div>
+<div>
+<h4 class="font-industrial text-lg text-white mb-3 uppercase tracking-tighter">Scalable &amp; Future-Ready</h4>
+<p class="text-on-surface-variant text-sm leading-relaxed">Architected for exponential growth, handling thousands of nodes without performance degradation.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="relative z-10 py-32 px-8 max-w-5xl mx-auto text-center">
+<div class="reveal-scale glass-card p-16 border-primary-fixed/30 relative overflow-hidden rounded-2xl">
+<div class="absolute inset-0 bg-primary-fixed/5 blur-3xl pointer-events-none"></div>
+<h2 class="font-industrial text-4xl text-white mb-8 relative z-10 uppercase leading-tight">Ready to Energize Your Grid?</h2>
+<p class="text-on-surface-variant mb-12 relative z-10 text-lg">Join the leaders in AI-driven energy management and reduce operational overhead by 40%.</p>
+<button onclick="handleGetStarted(event)" class="pulse-glow bg-primary-fixed text-on-primary-fixed px-12 py-5 font-headline font-black uppercase tracking-[0.2em] relative z-10 hover:scale-105 transition-transform rounded">
+                    Deploy Infrastructure
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full border-t border-[#434933]/15 bg-[#0E0E13]">
+<div class="grid grid-cols-2 grid-cols-4 gap-12 px-12 py-20 max-w-7xl mx-auto">
+<div class="col-span-2 col-span-1">
+<img alt="GridPulz Logo" class="h-24 w-auto mb-6 block mix-blend-lighten" src="assets/gridpulz_logo.png"/>
+<p class="text-[#C3CAAC] text-xs uppercase tracking-widest leading-loose">
+                    Defining the next epoch of energy intelligence and grid resilience.
+                </p>
+</div>
+<div class="flex flex-col gap-4">
+<h5 class="text-white font-headline font-bold uppercase text-xs tracking-[0.3em] mb-4">Ecosystem</h5>
+<a class="text-[#C3CAAC] text-sm uppercase tracking-widest hover:text-[#BFFF00] transition-all duration-200" href="#">Product</a>
+<a class="text-[#C3CAAC] text-sm uppercase tracking-widest hover:text-[#BFFF00] transition-all duration-200" href="#">Network</a>
+<a class="text-[#C3CAAC] text-sm uppercase tracking-widest hover:text-[#BFFF00] transition-all duration-200" href="#">Intelligence</a>
+</div>
+<div class="flex flex-col gap-4">
+<h5 class="text-white font-headline font-bold uppercase text-xs tracking-[0.3em] mb-4">Resources</h5>
+<a class="text-[#C3CAAC] text-sm uppercase tracking-widest hover:text-[#BFFF00] transition-all duration-200" href="#">Security</a>
+<a class="text-[#C3CAAC] text-sm uppercase tracking-widest hover:text-[#BFFF00] transition-all duration-200" href="#">Privacy</a>
+<a class="text-[#C3CAAC] text-sm uppercase tracking-widest hover:text-[#BFFF00] transition-all duration-200" href="#">Company</a>
+</div>
+<div class="flex flex-col gap-4">
+<h5 class="text-white font-headline font-bold uppercase text-xs tracking-[0.3em] mb-4">Contact</h5>
+<p class="text-[#C3CAAC] text-sm uppercase tracking-widest">Global HQ</p>
+<p class="text-[#C3CAAC] text-sm uppercase tracking-widest">Berlin, DE</p>
+<p class="text-[#BFFF00] text-sm uppercase tracking-widest font-bold mt-2 underline decoration-2 underline-offset-4 cursor-pointer">Support</p>
+</div>
+</div>
+<div class="border-t border-[#434933]/10 py-8 px-12">
+<div class="max-w-7xl mx-auto flex flex-row justify-between items-center gap-4">
+<p class="font-body text-xs uppercase tracking-widest text-[#C3CAAC]">© 2025 GRIDPULZ INDUSTRIAL. ALL RIGHTS RESERVED.</p>
+<div class="flex gap-8">
+<span class="material-symbols-outlined text-[#C3CAAC] hover:text-[#BFFF00] cursor-pointer">share</span>
+<span class="material-symbols-outlined text-[#C3CAAC] hover:text-[#BFFF00] cursor-pointer">podcasts</span>
+<span class="material-symbols-outlined text-[#C3CAAC] hover:text-[#BFFF00] cursor-pointer">public</span>
+</div>
+</div>
+</div>
+</footer>
+
+    <!-- Scroll Reveal & Nav Active State Script -->
+    <script>
+        // Scroll reveal observer
+        const revealEls = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+        revealEls.forEach(el => revealObserver.observe(el));
+
+        // Navbar blur on scroll
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        function handleGetStarted(e) {
+            e.preventDefault();
+            if (sessionStorage.getItem('isAuthenticated') === 'true') {
+                if (sessionStorage.getItem('userRole') === 'operator') {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    window.location.href = 'user-dashboard.html';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body></html>
+
+
+
+

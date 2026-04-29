@@ -1,0 +1,10 @@
+{
+  "station_id": "TEST",
+  "voltage": 230,
+  "plug1_power": 50,
+  "plug2_power": 60,
+  "plug3_power": 70,
+  "plug1_status": "occupied",
+  "plug2_status": "occupied",
+  "plug3_status": "occupied"
+}

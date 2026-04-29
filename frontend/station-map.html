@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GRIDPULZ | EV Driver Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="components/font-theme.css">
+    <!-- Leaflet CSS and JS (OpenStreetMap - Free, no API key needed) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#35343a",
+                        "on-surface-variant": "#c3caac",
+                        "surface-dim": "#131318",
+                        "primary-fixed": "#b8f600",
+                        "on-background": "#e4e1e9",
+                        "on-surface": "#e4e1e9",
+                        "outline": "#8d9479",
+                        "background": "#131318",
+                        "error": "#ffb4ab",
+                        "surface": "#131318",
+                        "surface-container": "#1f1f25",
+                        "neon": "#BFFF00",
+                    },
+                    fontFamily: {
+                        "headline": ["Michroma", "monospace"],
+                        "body": ["Josefin Sans", "sans-serif"],
+                        "mono": ["Michroma", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --neon: #CCFF00;
+            --surface: #131318;
+            --surface-variant: #1B1B1B;
+            --surface-container: #1F1F25;
+            --on-surface: #E4E1E9;
+            --on-surface-variant: #C3CAAC;
+            --outline: #8D9479;
+            --primary: #B8F600;
+            --primary-container: #2C3318;
+            --on-primary-container: #D4E897;
+            --error: #FFB4AB;
+            --error-container: #5C2B2B;
+            --on-error-container: #FFDAD6;
+        }
+
+        body {
+            background: var(--surface);
+            color: var(--on-surface);
+            font-family: 'Josefin Sans', sans-serif;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .brand-name {
+            font-family: 'Michroma', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--neon);
+            letter-spacing: 2px;
+        }
+
+        .profile-wrapper {
+            position: relative;
+        }
+
+        .nav-profile {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--neon);
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: var(--surface-container);
+            border: 1px solid var(--outline);
+            border-radius: 8px;
+            padding: 16px;
+            min-width: 240px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .avatar-lg {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .dd-name {
+            font-weight: 600;
+            color: var(--on-surface);
+        }
+
+        .dd-email {
+            font-size: 0.875rem;
+            color: var(--on-surface-variant);
+        }
+
+        .dd-divider {
+            border: none;
+            border-top: 1px solid var(--outline);
+            margin: 12px 0;
+        }
+
+        .dd-item {
+            display: block;
+            padding: 8px 12px;
+            color: var(--on-surface);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .dd-item:hover {
+            background: var(--primary-container);
+        }
+
+        .dd-logout {
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            color: var(--error);
+        }
+
+        .section-label {
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #aaaaaa;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #CCFF00;
+            animation: pulse_neon 2s infinite;
+        }
+
+        #loadChart {
+            display: block;
+            width: 100%;
+        }
+
+        .tag {
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .tag-green  { background: rgba(204,255,0,0.15); color: #CCFF00; border: 1px solid rgba(204,255,0,0.3); }
+        .tag-yellow { background: rgba(204,255,0,0.1); color: #CCFF00; border: 1px solid rgba(204,255,0,0.25); }
+        .tag-red    { background: rgba(255,68,68,0.15); color: #FF4444; border: 1px solid rgba(255,68,68,0.3); }
+
+        .progress-bar-track {
+            background: #353535;
+            border-radius: 9999px;
+            height: 6px;
+            overflow: hidden;
+            border: 1px solid #404040;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.8s ease, background 0.3s ease;
+            background: #CCFF00;
+        }
+
+        .progress-bar-fill.warn {
+            background: #FFA500;
+        }
+
+        .progress-bar-fill.alert {
+            background: #FF4444;
+        }
+
+        .animate-in { animation: fadeIn 0.5s ease forwards; }
+
+        a { color: #CCFF00; transition: color 0.2s ease; }
+        a:hover { color: #E6FF1A; }
+
+        /* Leaflet Map Styles */
+        #full-live-map {
+            width: 100%;
+            height: 100%;
+            min-height: 450px;
+        }
+        .leaflet-container {
+            background: #0A0A0F;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(184, 246, 0, 0.06) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .glass-card {
+            background: rgba(31, 31, 37, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        @keyframes pulse-glow {
+            0%   { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0.4); }
+            70%  { box-shadow: 0 0 0 8px rgba(191, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0); }
+        }
+        .status-pulse { animation: pulse-glow 2s infinite; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
+        .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
+        .fade-up-d3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* Toast notification */
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(100%); }
+        }
+        .toast-enter { animation: toastIn 0.35s ease-out forwards; }
+        .toast-exit  { animation: toastOut 0.3s ease-in forwards; }
+
+        /* Leaflet popup dark theme */
+        .leaflet-popup-content-wrapper { background: #1f1f25 !important; color: #fff !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; border: 1px solid rgba(255,255,255,0.05) !important; }
+        .leaflet-popup-tip { background: #1f1f25 !important; }
+        .leaflet-popup-close-button { color: #fff6 !important; }
+        .leaflet-popup-close-button:hover { color: #fff !important; }
+
+        /* Leaflet tooltip dark theme */
+        .custom-tooltip {
+            background: #1f1f25 !important;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
+            font-size: 11px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .custom-tooltip::before {
+            border-top-color: #1f1f25 !important;
+        }
+    </style>
+</head>
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen min-w-[1440px] overflow-x-auto">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none w-80"></div>
+
+    <div class="flex min-h-screen">
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="gp-sidebar" id="main-sidebar">
+            <div class="gp-sidebar__logo-zone">
+                <div class="gp-sidebar__logo-mark">
+                    <img src="assets/gridpulz_logo.png" alt="GridPulz Logo" class="w-8 h-8 object-contain">
+                </div>
+                <div class="gp-sidebar__brand">GridPulz</div>
+            </div>
+            <nav class="gp-sidebar__nav">
+                <span class="gp-sidebar__sec-label">Main</span>
+                <a href="user-dashboard.html" class="gp-sidebar__nav-item" data-page="user-dashboard">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/dashboard.png" alt="Dashboard"></span>
+                    <span class="gp-sidebar__nav-label">Dashboard</span>
+                </a>
+                <a href="charge-now.html" class="gp-sidebar__nav-item" data-page="charge-now">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/chargenow.png" alt="Charge Now"></span>
+                    <span class="gp-sidebar__nav-label">Charge Now</span>
+                </a>
+                <a href="prebook.html" class="gp-sidebar__nav-item" data-page="prebook">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/prebook.png" alt="Prebook"></span>
+                    <span class="gp-sidebar__nav-label">Prebook</span>
+                </a>
+                <a href="station-map.html" class="gp-sidebar__nav-item" data-page="station-map">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/map.png" alt="Station Map"></span>
+                    <span class="gp-sidebar__nav-label">Station Map</span>
+                </a>
+                <span class="gp-sidebar__sec-label">Config</span>
+                <a href="my-bookings.html" class="gp-sidebar__nav-item" data-page="my-bookings">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/mybookings.png" alt="My Bookings"></span>
+                    <span class="gp-sidebar__nav-label">My Bookings</span>
+                </a>
+                <a href="settings.html" class="gp-sidebar__nav-item" data-page="settings">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/settings.png" alt="Settings"></span>
+                    <span class="gp-sidebar__nav-label">Settings</span>
+                </a>
+            </nav>
+            <div class="gp-sidebar__separator"></div>
+            <div class="gp-sidebar__logout-zone">
+                <button class="gp-sidebar__nav-item logout" id="logout-btn">
+                    <span class="gp-sidebar__nav-icon"><img src="assets/logout.png" alt="Logout"></span>
+                    <span class="gp-sidebar__nav-label">Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============ MAIN CONTENT ============ -->
+        <main id="main-content" class="flex-1 relative dot-grid min-w-0 responsive-content">
+            <div class="absolute top-0 left-1/3 w-[600px] h-[600px] bg-neon opacity-[0.015] blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div class="max-w-6xl mx-auto p-10 space-y-6">
+                <!-- Page Title -->
+                <div class="fade-up flex items-center gap-4">
+                    <a href="user-dashboard.html" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                    <div>
+                        <h1 class="font-headline text-2xl font-bold text-white">Station Map</h1>
+                    </div>
+                </div>
+
+                <!-- ===== TAB 1: CHARGE NOW ===== -->
+                <!-- ===== TAB 2: PREBOOK SLOTS ===== -->
+                <!-- ===== TAB 3: STATION MAP ===== -->
+                <div id="tab-content-stationmap" class=" fade-up space-y-5 max-w-5xl">
+
+                    <!-- Map Metrics -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="glass-card rounded-xl border border-white/5 p-4">
+                            <div class="text-2xl font-mono font-bold text-white" id="sync-countdown">28s</div>
+                            <div class="text-[10px] text-on-surface-variant/40 mt-1">Next Live Sync</div>
+                        </div>
+                        <div class="glass-card rounded-xl border border-white/5 p-4">
+                            <div class="text-2xl font-mono font-bold text-white" id="map-station-count">3</div>
+                            <div class="text-[10px] text-on-surface-variant/40 mt-1">Stations in Radius</div>
+                        </div>
+                        <div class="glass-card rounded-xl border border-white/5 p-4">
+                            <div class="text-2xl font-mono font-bold text-white" id="zoom-label">Zoomed In</div>
+                            <div class="text-[10px] text-on-surface-variant/40 mt-1">Cluster Mode</div>
+                        </div>
+                    </div>
+
+                    <!-- SVG Station Map -->
+                    <div class="glass-card rounded-2xl border border-white/5 p-5">
+                        <div class="flex items-center gap-3 mb-4 flex-wrap">
+                            <span class="text-[9px] font-mono uppercase tracking-widest text-on-surface-variant/40">Grid Health:</span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span class="text-[10px] text-on-surface-variant/50">Low</span></span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span class="text-[10px] text-on-surface-variant/50">Moderate</span></span>
+                            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-[10px] text-on-surface-variant/50">Overloaded</span></span>
+                            <div class="flex-1"></div>
+                            <button onclick="toggleZoom()" class="text-[10px] font-mono px-3 py-1.5 rounded-lg border border-white/10 text-white/60 hover:text-neon hover:border-neon/30 transition-all">Toggle Zoom</button>
+                            <button onclick="forceSync()" class="text-[10px] font-mono px-3 py-1.5 rounded-lg border border-neon/30 text-neon bg-neon/5 hover:bg-neon/10 transition-all">Force Sync</button>
+                        </div>
+
+                        <div class="rounded-xl overflow-hidden border border-white/5 bg-[#0B0B12] relative h-[450px]">
+                            <!-- Loading State -->
+                            <div id="map-loading" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0A0A0F]/90 backdrop-blur-sm transition-opacity duration-500">
+                                <div class="w-10 h-10 border-4 border-white/10 border-t-neon rounded-full animate-spin mb-4"></div>
+                                <div class="font-mono text-xs text-white/50 tracking-widest text-center px-4" id="map-status-text">LOCATING USER<span class="animate-pulse">...</span></div>
+                            </div>
+                            
+                            <!-- Leaflet Map Container -->
+                            <div id="full-live-map" class="absolute inset-0 z-0"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/api-config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/stations-realtime.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="components/sidebar.js"></script>
+</body>
+
+
+

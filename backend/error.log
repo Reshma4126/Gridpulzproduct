@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "D:\studies\Hackathon\Gridpulzproduct\backend\main.py", line 5, in <module>
+    from fastapi import FastAPI
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\__init__.py", line 7, in <module>
+    from .applications import FastAPI as FastAPI
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py", line 16, in <module>
+    from fastapi import routing
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 32, in <module>
+    from fastapi.dependencies.models import Dependant
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\dependencies\models.py", line 4, in <module>
+    from fastapi.security.base import SecurityBase
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\security\__init__.py", line 1, in <module>
+    from .api_key import APIKeyCookie as APIKeyCookie
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\security\api_key.py", line 3, in <module>
+    from fastapi.openapi.models import APIKey, APIKeyIn
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\openapi\models.py", line 170, in <module>
+    class Schema(BaseModel):
+    ...<91 lines>...
+                extra = "allow"
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 286, in __new__
+    cls.__try_update_forward_refs__()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\main.py", line 808, in __try_update_forward_refs__
+    update_model_forward_refs(cls, cls.__fields__.values(), cls.__config__.json_encoders, localns, (NameError,))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\typing.py", line 554, in update_model_forward_refs
+    update_field_forward_refs(f, globalns=globalns, localns=localns)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\typing.py", line 520, in update_field_forward_refs
+    field.type_ = evaluate_forwardref(field.type_, globalns, localns or None)
+                  ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Reshma S\AppData\Local\Programs\Python\Python313\Lib\site-packages\pydantic\typing.py", line 66, in evaluate_forwardref
+    return cast(Any, type_)._evaluate(globalns, localns, set())
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: ForwardRef._evaluate() missing 1 required keyword-only argument: 'recursive_guard'
