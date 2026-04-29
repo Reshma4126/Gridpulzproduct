@@ -149,7 +149,7 @@ async function handleOperatorSignup(event) {
         console.error('Operator signup error:', error);
         const errMsg = String(error?.message || 'Unknown error');
         if (errMsg.toLowerCase().includes('failed to fetch')) {
-            alert('Registration error: Backend is unreachable at http://127.0.0.1:8000. Start the API server using run_backend.bat and try again.');
+            alert('Registration error: Backend is unreachable. Please check your connection and try again.');
         } else {
             alert('Registration error: ' + errMsg);
         }
