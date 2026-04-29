@@ -24,7 +24,7 @@ function getBackendURL() {
 }
 
 const BACKEND_BASE_URL = getBackendURL();
-const API_BASE_URL = `${BACKEND_BASE_URL}/api`;
+const API_BASE_URL = BACKEND_BASE_URL; // Backend already handles /api prefix
 
 console.log(`[API Config] Backend URL: ${BACKEND_BASE_URL}`);
 console.log(`[API Config] Current origin: ${window.location.origin}`);
