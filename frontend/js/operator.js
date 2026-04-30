@@ -264,7 +264,7 @@ function updateDashboardUI(currentLoad, predictedLoad, activeSessions, mlData = 
     const safePredicted = Number(predictedLoad || 0);
     const safeSessions = Number(activeSessions || 0);
 
-    if (safePredicted > 50 && !redirecting) {
+    if (safePredicted > 90 && !redirecting) {
         redirecting = true;
         clearInterval(tickInterval);
         window.location.href = 'alerts.html?trigger=overload&load=' + safePredicted.toFixed(1);
