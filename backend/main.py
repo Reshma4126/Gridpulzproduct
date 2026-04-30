@@ -164,6 +164,44 @@ async def get_station_live_data():
         }
 
 
+@app.post("/station-live")
+async def receive_station_data(station_data: StationData):
+    """Receive station data from ESP32"""
+    try:
+        client = supabase_write or supabase_read
+        if client is None:
+            return {"status": "error", "message": "Database not available"}
+        
+        # Insert data into database
+        response = client.table("station_live_data").insert({
+            "station_id": station_data.station_id,
+            "voltage": station_data.voltage,
+            "plug1_power": station_data.plug1_power,
+            "plug2_power": station_data.plug2_power,
+            "plug3_power": station_data.plug3_power,
+            "plug1_status": station_data.plug1_status,
+            "plug2_status": station_data.plug2_status,
+            "plug3_status": station_data.plug3_status,
+            "data_source": station_data.data_source,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }).execute()
+        
+        logger.info(f"Received station data from {station_data.station_id}")
+        return {
+            "status": "success",
+            "message": "Station data received",
+            "station_id": station_data.station_id,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error receiving station data: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
 @app.on_event("startup")
 async def startup_event():
     """Log startup message"""
