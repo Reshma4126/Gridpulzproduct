@@ -264,7 +264,11 @@ function updateDashboardUI(currentLoad, predictedLoad, activeSessions, mlData = 
     const safePredicted = Number(predictedLoad || 0);
     const safeSessions = Number(activeSessions || 0);
 
-    if (safePredicted > 90 && !redirecting) {
+    // Check if we're in demo mode - disable alerts
+    const urlParams = new URLSearchParams(window.location.search);
+    const demoMode = urlParams.get('demo') === 'true';
+    
+    if (safePredicted > 90 && !redirecting && !demoMode) {
         redirecting = true;
         clearInterval(tickInterval);
         window.location.href = 'alerts.html?trigger=overload&load=' + safePredicted.toFixed(1);
@@ -307,28 +311,33 @@ function updateDashboardUI(currentLoad, predictedLoad, activeSessions, mlData = 
     // Only update ML status tag if NOT on dashboard.html (to avoid conflicts)
     // dashboard.js handles its own ML prediction updates
     if (!window.location.pathname.includes('dashboard.html')) {
-        const mlTag = document.getElementById('ml-status-tag');
-        if (mlTag) {
-            if (safePredicted >= 45) {
-                mlTag.textContent = 'ELEVATED';
-                mlTag.style.background = 'rgba(255,165,0,0.15)';
-                mlTag.style.color = '#FFA500';
-                mlTag.style.border = '1px solid rgba(255,165,0,0.3)';
+        const statusTagEl = document.getElementById('ml-status-tag');
+        if (statusTagEl) {
+            if (demoMode) {
+                statusTagEl.textContent = 'DEMO MODE';
+                statusTagEl.style.background = 'rgba(0, 123, 255, 0.15)';
+                statusTagEl.style.color = '#007BFF';
+                statusTagEl.style.border = '1px solid rgba(0, 123, 255, 0.3)';
+            } else if (mlData?.model_used === 'simulated') {
+                statusTagEl.textContent = 'SIMULATED';
+                statusTagEl.style.background = 'rgba(255, 165, 0, 0.15)';
+                statusTagEl.style.color = '#FFA500';
+                statusTagEl.style.border = '1px solid rgba(255, 165, 0, 0.3)';
             } else {
-                mlTag.textContent = 'NOMINAL';
-                mlTag.style.background = 'rgba(204,255,0,0.15)';
-                mlTag.style.color = '#CCFF00';
-                mlTag.style.border = '1px solid rgba(204,255,0,0.3)';
+                statusTagEl.textContent = 'NOMINAL';
+                statusTagEl.style.background = 'rgba(166, 255, 0, 0.15)';
+                statusTagEl.style.color = '#a6ff00';
+                statusTagEl.style.border = '1px solid rgba(166, 255, 0, 0.3)';
             }
         }
+    }
 
-        // Update ML confidence display
-        const mlConfidenceEl = document.getElementById('ml-confidence');
-        if (mlConfidenceEl) {
-            // Calculate confidence based on model used
-            const confidence = (mlData && mlData.model_used === 'ML') ? '94.2%' : '85.0%';
-            mlConfidenceEl.textContent = confidence;
-        }
+    // Update ML confidence display
+    const mlConfidenceEl = document.getElementById('ml-confidence');
+    if (mlConfidenceEl) {
+        // Calculate confidence based on model used
+        const confidence = (mlData && mlData.model_used === 'ML') ? '94.2%' : '85.0%';
+        mlConfidenceEl.textContent = confidence;
     }
 
     updatePointsGrid(safeSessions);
