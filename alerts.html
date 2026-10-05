@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true' || sessionStorage.getItem('userRole') !== 'operator') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>GridPulz Dashboard - Alerts</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Michroma&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "background": "#131313",
+                        "on-primary": "#283500",
+                        "outline": "#8e9379",
+                        "on-tertiary-container": "#c71623",
+                        "inverse-primary": "#506600",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c9ac",
+                        "surface-tint": "#abd600",
+                        "error-container": "#93000a",
+                        "outline-variant": "#444933",
+                        "surface-container-highest": "#353535",
+                        "primary-container": "#c3f400",
+                        "secondary-fixed": "#ffdea8",
+                        "surface-container": "#1f1f1f",
+                        "primary-fixed": "#c3f400",
+                        "surface-container-low": "#1b1b1b",
+                        "on-tertiary": "#680009",
+                        "on-error": "#690005",
+                        "tertiary": "#ffffff",
+                        "secondary": "#ffdb9d",
+                        "primary-fixed-dim": "#abd600",
+                        "surface": "#131313",
+                        "on-tertiary-fixed": "#410004",
+                        "inverse-surface": "#e2e2e2",
+                        "secondary-container": "#feb700",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-container": "#556d00",
+                        "on-secondary-container": "#6b4b00",
+                        "surface-container-high": "#2a2a2a",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "tertiary-container": "#ffdad7",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#930012",
+                        "primary": "#ffffff",
+                        "surface-dim": "#131313",
+                        "tertiary-fixed": "#ffdad7",
+                        "inverse-on-surface": "#303030",
+                        "on-background": "#e2e2e2",
+                        "on-secondary-fixed": "#271900",
+                        "surface-variant": "#353535",
+                        "on-primary-fixed": "#161e00",
+                        "secondary-fixed-dim": "#ffba20",
+                        "on-secondary-fixed-variant": "#5e4200",
+                        "on-secondary": "#412d00",
+                        "surface-bright": "#393939",
+                        "on-surface": "#e2e2e2"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"],
+                        "michroma": ["Michroma", "sans-serif"],
+                        "mono": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .michroma-heading {
+            font-family: 'Michroma', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        
+        /* Page Load Transitions */
+        @keyframes dashboardFadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        main > div {
+            animation: dashboardFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+        main > div:nth-child(1) { animation-delay: 0.1s; }
+        main > div:nth-child(2) { animation-delay: 0.2s; }
+        main > div:nth-child(3) { animation-delay: 0.3s; }
+        main > div:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
+    <!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#131313]">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="flex items-center">
+            <a href="index.html" class="hover:opacity-80 transition-opacity"><img alt="GridPulz Logo" class="h-32 w-auto mix-blend-lighten" src="gridpulz_logo.png"/></a>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="p-2 text-[#888888] hover:bg-[#353535] transition-colors active:scale-95 duration-100">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+        </div>
+    </div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-48 pb-32 px-6 min-h-screen bg-[#131313] max-w-7xl mx-auto">
+        <!-- Dashboard Header & Filters -->
+        <div class="mb-8">
+            <h1 class="text-4xl tracking-tighter mb-6 text-white michroma-heading">Alerts Center</h1>
+            <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                <button
+                    class="px-6 py-2 bg-primary-fixed text-on-primary-fixed font-headline font-bold uppercase text-xs tracking-widest transition-all">
+                    All
+                </button>
+                <button
+                    class="px-6 py-2 bg-surface-container-high text-[#FF4444] border border-[#FF4444]/20 font-headline font-bold uppercase text-xs tracking-widest hover:bg-[#FF4444]/10 transition-all">
+                    Critical
+                </button>
+                <button
+                    class="px-6 py-2 bg-surface-container-high text-[#FFB800] border border-[#FFB800]/20 font-headline font-bold uppercase text-xs tracking-widest hover:bg-[#FFB800]/10 transition-all">
+                    Warning
+                </button>
+                <button
+                    class="px-6 py-2 bg-surface-container-high text-[#BFFF00] border border-[#BFFF00]/20 font-headline font-bold uppercase text-xs tracking-widest hover:bg-[#BFFF00]/10 transition-all">
+                    Info
+                </button>
+            </div>
+        </div>
+        <!-- Alerts List -->
+        <div class="flex flex-col gap-4">
+            <!-- Alert Card: Critical -->
+            <div
+                class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex gap-6 items-start">
+                    <div class="mt-1">
+                        <span
+                            class="bg-[#FF4444] text-[#131313] px-3 py-1 text-[10px] font-headline font-bold uppercase tracking-widest">Critical</span>
+                    </div>
+                    <div>
+                        <div class="font-mono text-[10px] text-[#888888] tracking-widest mb-2 uppercase">2023-10-27 |
+                            14:22:01.04</div>
+                        <h3 class="text-xl font-headline font-bold text-white tracking-tight uppercase">Voltage drop at Cluster A-4
+                        </h3>
+                        <p class="text-[#888888] text-sm mt-2 max-w-md">Immediate inspection required. Power throughput
+                            fell below 180V threshold for &gt;300ms.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button
+                        class="px-6 py-2 border border-[#888888] text-[#888888] font-headline font-bold uppercase text-[10px] tracking-widest hover:border-white hover:text-white transition-all active:opacity-80">
+                        Acknowledge
+                    </button>
+                </div>
+            </div>
+            <!-- Alert Card: Warning -->
+            <div
+                class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex gap-6 items-start">
+                    <div class="mt-1">
+                        <span
+                            class="bg-[#FFB800] text-[#131313] px-3 py-1 text-[10px] font-headline font-bold uppercase tracking-widest">Warning</span>
+                    </div>
+                    <div>
+                        <div class="font-mono text-[10px] text-[#888888] tracking-widest mb-2 uppercase">2023-10-27 |
+                            13:45:12.88</div>
+                        <h3 class="text-xl font-headline font-bold text-white tracking-tight uppercase">High ambient temp detected
+                        </h3>
+                        <p class="text-[#888888] text-sm mt-2 max-w-md">Substation Beta thermal sensors reporting 42°C.
+                            Cooling system activated at 100%.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button
+                        class="px-6 py-2 border border-[#888888] text-[#888888] font-headline font-bold uppercase text-[10px] tracking-widest hover:border-white hover:text-white transition-all active:opacity-80">
+                        Acknowledge
+                    </button>
+                </div>
+            </div>
+            <!-- Alert Card: Info -->
+            <div
+                class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex gap-6 items-start">
+                    <div class="mt-1">
+                        <span
+                            class="bg-[#BFFF00] text-[#131313] px-3 py-1 text-[10px] font-headline font-bold uppercase tracking-widest">Info</span>
+                    </div>
+                    <div>
+                        <div class="font-mono text-[10px] text-[#888888] tracking-widest mb-2 uppercase">2023-10-27 |
+                            12:00:00.00</div>
+                        <h3 class="text-xl font-headline font-bold text-white tracking-tight uppercase">System reboot successful</h3>
+                        <p class="text-[#888888] text-sm mt-2 max-w-md">Firmware update v4.2.1 deployed across all local
+                            charging nodes. No errors reported.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 opacity-50 cursor-not-allowed">
+                    <button
+                        class="px-6 py-2 border border-[#444933] text-[#444933] font-headline font-bold uppercase text-[10px] tracking-widest"
+                        disabled="">
+                        Resolved
+                    </button>
+                </div>
+            </div>
+            <!-- Visual Graphic: Data Visualization -->
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a]">
+                    <div class="flex justify-between items-end mb-8">
+                        <div>
+                            <span class="text-[10px] font-mono uppercase text-[#888888] tracking-widest">Alert Frequency
+                                / 24H</span>
+                            <div class="text-3xl font-bold text-white font-headline mt-1">84 TOTAL</div>
+                        </div>
+                        <span class="text-[#FF4444] font-mono text-xs">+12% vs Prev</span>
+                    </div>
+                    <!-- Chart Lines/Bars -->
+                    <div class="flex items-end gap-1 h-24">
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[20%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[35%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[25%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[60%]"></div>
+                        <div class="flex-1 bg-[#FF4444] hover:bg-[#FF4444]/80 transition-colors h-[95%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[40%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[30%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[50%]"></div>
+                        <div class="flex-1 bg-[#FFB800] hover:bg-[#FFB800]/80 transition-colors h-[75%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[20%]"></div>
+                        <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors h-[15%]"></div>
+                        <div class="flex-1 bg-[#BFFF00] hover:bg-[#BFFF00]/80 transition-colors h-[30%]"></div>
+                    </div>
+                </div>
+                <div
+                    class="relative overflow-hidden bg-[#111111] border border-[#222222] min-h-[200px] flex flex-col justify-center px-8">
+                    <div class="z-10 bg-[#111111]/80 backdrop-blur-sm p-4 inline-block w-fit">
+                        <h4 class="text-white michroma-heading text-xl mb-4">Network Health</h4>
+                        <p class="text-[#888888] font-mono text-xs mb-6 uppercase tracking-widest">Region: North
+                            Atlantic Grid</p>
+                        <div class="flex gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-[#BFFF00]"></span>
+                                <span class="text-[10px] font-mono uppercase text-white">Stable</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 bg-[#FF4444]"></span>
+                                <span class="text-[10px] font-mono uppercase text-white">Critical</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute inset-0 opacity-30 pointer-events-none">
+                        <img class="w-full h-full object-cover grayscale brightness-50 mix-blend-screen"
+                            alt="abstract digital grid map of a metropolitan city electrical infrastructure with glowing nodes and high-tech UI lines"
+                            src="ev_hero_bg.png" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- BottomNavBar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 pb-safe bg-[#131313]/80 backdrop-blur-xl border-t border-[#444933]/15">
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 font-mono text-[10px] uppercase tracking-widest hover:text-white transition-all active:opacity-80"
+            href="dashboard.html">
+            <span class="material-symbols-outlined mb-1">dashboard</span>
+            <span>Monitor</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 font-mono text-[10px] uppercase tracking-widest hover:text-white transition-all active:opacity-80"
+            href="analytics.html">
+            <span class="material-symbols-outlined mb-1">analytics</span>
+            <span>Analytics</span>
+        </a>
+        <!-- ACTIVE TAB -->
+        <a class="flex flex-col items-center justify-center bg-[#BFFF00] text-[#161e00] rounded-none px-6 py-2 font-mono font-bold text-[10px] uppercase tracking-widest active:opacity-80 border-t-2 border-[#BFFF00]"
+            href="alerts.html">
+            <span class="material-symbols-outlined mb-1">notifications_active</span>
+            <span>Alerts</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 font-mono text-[10px] uppercase tracking-widest hover:text-white transition-all active:opacity-80"
+            href="systems.html">
+            <span class="material-symbols-outlined mb-1">settings_input_component</span>
+            <span>System</span>
+        </a>
+    </nav>
+</body>
+
+</html>

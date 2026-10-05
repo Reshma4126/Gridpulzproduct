@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Button Click</title>
+    <style>
+        .flex { display: flex; }
+        .flex-1 { flex: 1; }
+        .bg-surface-container-highest { background: #35343a; }
+        .p-1 { padding: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .font-bold { font-weight: 700; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        .text-10px { font-size: 10px; }
+        .rounded { border-radius: 0.25rem; }
+        .transition-colors { transition: color 0.2s; }
+        .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .bg-green { background: #BFFF00; }
+        .text-dark { color: #161e00; }
+        .text-light { color: #c3caac; }
+        .hover-text-white:hover { color: white; }
+        .pointer-events-none { pointer-events: none; }
+        .position-relative { position: relative; }
+        .z-10 { z-index: 10; }
+    </style>
+</head>
+<body>
+    <h1>Button Click Debug Test</h1>
+    
+    <div class="flex bg-surface-container-highest p-1 rounded-lg">
+        <button id="tab-operator" type="button" class="flex-1 py-3 font-bold uppercase tracking-widest text-10px rounded bg-green text-dark transition-colors shadow-sm">Station Operator</button>
+        <button id="tab-user" type="button" class="flex-1 py-3 font-bold uppercase tracking-widest text-10px rounded text-light hover-text-white transition-colors">EV Driver</button>
+    </div>
+    
+    <div id="output">Click a button to see the result</div>
+
+    <script>
+        function switchRole(role) {
+            console.log('switchRole called with:', role);
+            document.getElementById('output').innerHTML = 'switchRole called with: ' + role;
+        }
+
+        // Test 1: Direct event listener
+        document.getElementById('tab-operator').addEventListener('click', function() {
+            console.log('Operator button clicked');
+            switchRole('operator');
+        });
+
+        // Test 2: Direct event listener for user button
+        document.getElementById('tab-user').addEventListener('click', function() {
+            console.log('User button clicked');
+            switchRole('user');
+        });
+
+        // Test 3: Check if elements exist
+        console.log('Operator button:', document.getElementById('tab-operator'));
+        console.log('User button:', document.getElementById('tab-user'));
+
+        // Test 4: Check computed styles
+        window.addEventListener('load', function() {
+            const userBtn = document.getElementById('tab-user');
+            const computedStyle = window.getComputedStyle(userBtn);
+            console.log('User button pointer-events:', computedStyle.pointerEvents);
+            console.log('User button display:', computedStyle.display);
+            console.log('User button visibility:', computedStyle.visibility);
+            console.log('User button z-index:', computedStyle.zIndex);
+        });
+    </script>
+</body>
+</html>

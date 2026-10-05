@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true' || sessionStorage.getItem('userRole') !== 'operator') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>GridPulz Dashboard - System Health</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Michroma&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "background": "#131313",
+                        "on-primary": "#283500",
+                        "outline": "#8e9379",
+                        "on-tertiary-container": "#c71623",
+                        "inverse-primary": "#506600",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c9ac",
+                        "surface-tint": "#abd600",
+                        "error-container": "#93000a",
+                        "outline-variant": "#444933",
+                        "surface-container-highest": "#353535",
+                        "primary-container": "#c3f400",
+                        "secondary-fixed": "#ffdea8",
+                        "surface-container": "#1f1f1f",
+                        "primary-fixed": "#c3f400",
+                        "surface-container-low": "#1b1b1b",
+                        "on-tertiary": "#680009",
+                        "on-error": "#690005",
+                        "tertiary": "#ffffff",
+                        "secondary": "#ffdb9d",
+                        "primary-fixed-dim": "#abd600",
+                        "surface": "#131313",
+                        "on-tertiary-fixed": "#410004",
+                        "inverse-surface": "#e2e2e2",
+                        "secondary-container": "#feb700",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-container": "#556d00",
+                        "on-secondary-container": "#6b4b00",
+                        "surface-container-high": "#2a2a2a",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "tertiary-container": "#ffdad7",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#930012",
+                        "primary": "#ffffff",
+                        "surface-dim": "#131313",
+                        "tertiary-fixed": "#ffdad7",
+                        "inverse-on-surface": "#303030",
+                        "on-background": "#e2e2e2",
+                        "on-secondary-fixed": "#271900",
+                        "surface-variant": "#353535",
+                        "on-primary-fixed": "#161e00",
+                        "secondary-fixed-dim": "#ffba20",
+                        "on-secondary-fixed-variant": "#5e4200",
+                        "on-secondary": "#412d00",
+                        "surface-bright": "#393939",
+                        "on-surface": "#e2e2e2"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"],
+                        "michroma": ["Michroma", "sans-serif"],
+                        "mono": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .michroma-heading {
+            font-family: 'Michroma', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        
+        /* Page Load Transitions */
+        @keyframes dashboardFadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        main > div {
+            animation: dashboardFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+        main > div:nth-child(1) { animation-delay: 0.1s; }
+        main > div:nth-child(2) { animation-delay: 0.2s; }
+        main > div:nth-child(3) { animation-delay: 0.3s; }
+        main > div:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+    <!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#131313] dark:bg-[#131313] border-b-0">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="flex items-center">
+            <a href="index.html" class="hover:opacity-80 transition-opacity"><img alt="GridPulz Logo" class="h-32 w-auto mix-blend-lighten" src="gridpulz_logo.png"/></a>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="text-[#888888] hover:bg-[#353535] transition-colors p-2 active:scale-95 duration-100">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+        </div>
+    </div>
+</header>
+<main class="pt-48 pb-32 px-6 max-w-7xl mx-auto">
+        <!-- Dashboard Header -->
+        <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+                <h1 class="michroma-heading text-5xl tracking-tighter text-white mb-2">System Health
+                </h1>
+                <p class="font-mono text-sm tracking-widest uppercase opacity-60 text-[#888888]">Telemetry Node:
+                    GP-DELTA-09</p>
+            </div>
+            <div class="flex items-center gap-3 bg-surface-container-low p-4 border border-outline-variant/10">
+                <div class="w-3 h-3 bg-[#BFFF00] rounded-full animate-pulse"></div>
+                <span class="font-mono text-sm font-bold text-[#BFFF00]">SYSTEM OPERATIONAL</span>
+            </div>
+        </div>
+        <!-- Bento Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Edge Device Status -->
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col justify-between min-h-[180px]">
+                <div class="flex justify-between items-start">
+                    <span class="michroma-heading text-[10px] text-[#888888]">Edge Device
+                        Status</span>
+                    <span class="material-symbols-outlined text-[#BFFF00] text-xl" data-icon="router">router</span>
+                </div>
+                <div class="flex items-baseline gap-3">
+                    <div class="w-4 h-4 bg-[#BFFF00] rounded-full animate-pulse"></div>
+                    <span class="font-headline font-bold text-4xl uppercase tracking-tighter text-white">ONLINE</span>
+                </div>
+            </div>
+            <!-- Sensor Status -->
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col justify-between min-h-[180px]">
+                <div class="flex justify-between items-start">
+                    <span class="michroma-heading text-[10px] text-[#888888]">Sensor Network</span>
+                    <span class="material-symbols-outlined text-[#888888] text-xl" data-icon="sensors">sensors</span>
+                </div>
+                <div class="flex items-baseline gap-3">
+                    <span class="font-headline font-bold text-4xl uppercase tracking-tighter text-white">OK</span>
+                    <span class="font-mono text-[10px] text-[#161e00] font-bold tracking-widest bg-[#BFFF00] px-2 py-1">NO FAULTS</span>
+                </div>
+            </div>
+            <!-- Communication Status -->
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col justify-between min-h-[180px]">
+                <div class="flex justify-between items-start">
+                    <span class="michroma-heading text-[10px] text-[#888888]">Communication</span>
+                    <span class="material-symbols-outlined text-[#888888] text-xl"
+                        data-icon="settings_input_antenna">settings_input_antenna</span>
+                </div>
+                <div class="flex flex-col">
+                    <span
+                        class="font-headline font-bold text-3xl uppercase tracking-tighter text-white">CONNECTED</span>
+                    <span class="font-mono text-[10px] text-[#888888] mt-1">LATENCY: 14ms</span>
+                </div>
+            </div>
+            <!-- Uptime Metric -->
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col justify-between min-h-[180px]">
+                <div class="flex justify-between items-start">
+                    <span class="michroma-heading text-[10px] text-[#888888]">System Uptime</span>
+                    <span class="material-symbols-outlined text-[#888888] text-xl" data-icon="timer">timer</span>
+                </div>
+                <div class="font-mono font-bold text-2xl text-white tracking-tight">
+                    14d 7h 22m
+                </div>
+            </div>
+            <!-- Main Telemetry Center -->
+            <div class="md:col-span-3 lg:col-span-3 bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] relative overflow-hidden mt-2">
+                <div class="flex justify-between items-center mb-12">
+                    <h3 class="michroma-heading text-[14px] text-[#BFFF00] italic">Thermal Dynamics</h3>
+                    <div class="flex gap-4">
+                        <div class="text-right">
+                            <div class="michroma-heading text-[10px] text-[#888888]">Critical Threshold</div>
+                            <div class="font-mono text-sm text-error mt-1">85°C</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="flex flex-col">
+                        <span class="font-mono font-bold text-[10px] uppercase tracking-[0.3em] text-[#888888] mb-2">Current Temperature</span>
+                        <div class="font-headline font-bold text-8xl text-white tracking-tighter leading-none">
+                            42<span class="text-[#BFFF00]">°C</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-end">
+                        <div class="h-2 w-full bg-[#222222] mb-4">
+                            <div class="h-full bg-[#BFFF00]" style="width: 49%"></div>
+                        </div>
+                        <div class="flex justify-between font-mono text-[10px] text-[#888888]">
+                            <span>30°C (IDLE)</span>
+                            <span>NORMAL RANGE</span>
+                            <span>100°C (CRIT)</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Abstract Technical Decoration -->
+                <div class="absolute top-0 right-0 p-2 opacity-10">
+                    <span
+                        class="font-mono text-[8px] leading-none block">DATA_STREAM::INIT<br />PARSING_PACKET_662<br />VOLTAGE_STABLE<br />TEMP_NOMINAL</span>
+                </div>
+            </div>
+            <!-- Last Data Sync -->
+            <div class="bg-[#BFFF00] p-6 flex flex-col justify-between min-h-[180px] mt-2">
+                <div class="flex justify-between items-start">
+                    <span class="michroma-heading text-[10px] text-[#161e00]">Last Data Received</span>
+                    <span class="material-symbols-outlined text-[#161e00] text-xl" data-icon="sync">sync</span>
+                </div>
+                <div>
+                    <div class="font-mono font-bold text-4xl text-[#161e00] tracking-tighter leading-none mb-2">2s ago
+                    </div>
+                    <div class="font-headline font-bold text-[10px] text-[#161e00] uppercase tracking-widest opacity-80">
+                        Live Polling</div>
+                </div>
+            </div>
+        </div>
+        <!-- System Logs Table (Brutalist style) -->
+        <div class="mt-16 bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a]">
+            <div class="flex justify-between items-end mb-6">
+                <h2 class="michroma-heading text-xl text-white">Event Logs</h2>
+                <span class="font-mono text-[10px] text-[#888888] uppercase tracking-widest">Showing last 4
+                    cycles</span>
+            </div>
+            <div class="border-t border-[#444933]/15">
+                <div class="grid grid-cols-4 py-4 font-headline font-bold text-[10px] uppercase tracking-widest text-[#888888] border-b border-[#222222]">
+                    <div class="px-2">Timestamp</div>
+                    <div class="px-2">Event ID</div>
+                    <div class="px-2">Description</div>
+                    <div class="px-2 text-right">Status</div>
+                </div>
+                <div class="space-y-px bg-[#222222]">
+                    <div class="grid grid-cols-4 py-5 bg-[#171717] hover:bg-[#1b1b1b] transition-colors px-2 font-mono text-xs">
+                        <div class="text-white">14:22:01.04</div>
+                        <div class="text-[#888888]">ERR_NONE</div>
+                        <div class="text-white">Telemetry handshake successful</div>
+                        <div class="text-[#BFFF00] text-right font-bold">ACK</div>
+                    </div>
+                    <div class="grid grid-cols-4 py-5 bg-[#171717] hover:bg-[#1b1b1b] transition-colors px-2 font-mono text-xs">
+                        <div class="text-white">14:21:58.22</div>
+                        <div class="text-[#888888]">SYS_PING</div>
+                        <div class="text-white">Node GP-DELTA responding normally</div>
+                        <div class="text-[#BFFF00] text-right font-bold">ACK</div>
+                    </div>
+                    <div class="grid grid-cols-4 py-5 bg-[#171717] hover:bg-[#1b1b1b] transition-colors px-2 font-mono text-xs">
+                        <div class="text-white">14:20:12.91</div>
+                        <div class="text-[#888888]">PWR_FLUCT</div>
+                        <div class="text-[#FFB800]">Minor voltage variance detected (0.2v)</div>
+                        <div class="text-[#FFB800] text-right font-bold">WARN</div>
+                    </div>
+                    <div class="grid grid-cols-4 py-5 bg-[#171717] hover:bg-[#1b1b1b] transition-colors px-2 font-mono text-xs">
+                        <div class="text-white">14:15:44.00</div>
+                        <div class="text-[#888888]">BOOT_INIT</div>
+                        <div class="text-white">System recovery and data sync</div>
+                        <div class="text-[#BFFF00] text-right font-bold">ACK</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- BottomNavBar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 pb-safe bg-[#131313]/80 backdrop-blur-xl border-t border-[#444933]/15">
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all active:opacity-80"
+            href="dashboard.html">
+            <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1">Monitor</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all active:opacity-80"
+            href="analytics.html">
+            <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1">Analytics</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all active:opacity-80"
+            href="alerts.html">
+            <span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1">Alerts</span>
+        </a>
+        <a class="flex flex-col items-center justify-center bg-[#BFFF00] text-[#161e00] rounded-none px-6 py-2 active:opacity-80 border-t-2 border-[#BFFF00]"
+            href="systems.html">
+            <span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1 font-bold">System</span>
+        </a>
+    </nav>
+</body>
+
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true' || sessionStorage.getItem('userRole') !== 'operator') {
+            window.location.href = 'login.html';
+        }
+    </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GridPulz Dashboard - Monitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Michroma&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "tertiary-fixed-dim": "#ffb3ad",
+                "background": "#131313",
+                "on-primary": "#283500",
+                "outline": "#8e9379",
+                "on-tertiary-container": "#c71623",
+                "inverse-primary": "#506600",
+                "error": "#ffb4ab",
+                "on-surface-variant": "#c4c9ac",
+                "surface-tint": "#abd600",
+                "error-container": "#93000a",
+                "outline-variant": "#444933",
+                "surface-container-highest": "#353535",
+                "primary-container": "#c3f400",
+                "secondary-fixed": "#ffdea8",
+                "surface-container": "#1f1f1f",
+                "primary-fixed": "#c3f400",
+                "surface-container-low": "#1b1b1b",
+                "on-tertiary": "#680009",
+                "on-error": "#690005",
+                "tertiary": "#ffffff",
+                "secondary": "#ffdb9d",
+                "primary-fixed-dim": "#abd600",
+                "surface": "#131313",
+                "on-tertiary-fixed": "#410004",
+                "inverse-surface": "#e2e2e2",
+                "secondary-container": "#feb700",
+                "surface-container-lowest": "#0e0e0e",
+                "on-primary-container": "#556d00",
+                "on-secondary-container": "#6b4b00",
+                "surface-container-high": "#2a2a2a",
+                "on-primary-fixed-variant": "#3c4d00",
+                "tertiary-container": "#ffdad7",
+                "on-error-container": "#ffdad6",
+                "on-tertiary-fixed-variant": "#930012",
+                "primary": "#ffffff",
+                "surface-dim": "#131313",
+                "tertiary-fixed": "#ffdad7",
+                "inverse-on-surface": "#303030",
+                "on-background": "#e2e2e2",
+                "on-secondary-fixed": "#271900",
+                "surface-variant": "#353535",
+                "on-primary-fixed": "#161e00",
+                "secondary-fixed-dim": "#ffba20",
+                "on-secondary-fixed-variant": "#5e4200",
+                "on-secondary": "#412d00",
+                "surface-bright": "#393939",
+                "on-surface": "#e2e2e2"
+              },
+              fontFamily: {
+                "headline": ["Space Grotesk", "sans-serif"],
+                "body": ["Inter", "sans-serif"],
+                "label": ["Inter", "sans-serif"],
+                "michroma": ["Michroma", "sans-serif"],
+                "mono": ["Inter", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+    <style>
+        .michroma-heading {
+            font-family: 'Michroma', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        
+        /* Page Load Transitions */
+        @keyframes dashboardFadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        main > div {
+            animation: dashboardFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+        main > div:nth-child(1) { animation-delay: 0.1s; }
+        main > div:nth-child(2) { animation-delay: 0.2s; }
+        main > div:nth-child(3) { animation-delay: 0.3s; }
+        main > div:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+  </head>
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
+<header class="fixed top-0 w-full z-50 bg-[#131313] dark:bg-[#131313]">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="flex items-center">
+            <a href="index.html" class="hover:opacity-80 transition-opacity"><img alt="GridPulz Logo" class="h-32 w-auto mix-blend-lighten" src="gridpulz_logo.png"/></a>
+        </div>
+        <div class="flex gap-4 items-center">
+            <a href="pricing.html" class="flex items-center gap-1 px-3 py-1.5 text-[#888888] hover:bg-[#353535] hover:text-[#BFFF00] transition-colors active:scale-95 duration-100 rounded">
+                <span class="material-symbols-outlined text-[20px]" data-icon="payments">payments</span>
+                <span class="text-[10px] hidden md:inline font-headline font-bold uppercase tracking-widest">SaaS Pricing</span>
+            </a>
+            <button class="p-2 text-[#888888] hover:bg-[#353535] transition-colors active:scale-95 duration-100 rounded">
+                <span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+            </button>
+            <button class="p-2 text-[#888888] hover:bg-[#353535] transition-colors active:scale-95 duration-100 rounded" onclick="logout()">
+                <span class="material-symbols-outlined text-[20px]" data-icon="account_circle">account_circle</span>
+            </button>
+        </div>
+    </div>
+</header>
+<main class="pt-48 pb-28 px-6 max-w-7xl mx-auto space-y-6">
+<!-- Panel 1: System Status Hero -->
+<section class="bg-surface-container-low p-8 border-l-4 border-[#BFFF00] relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-8xl" data-icon="grid_view">grid_view</span>
+</div>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+<div class="space-y-2">
+<div class="flex items-center gap-3">
+<span class="text-xs font-mono uppercase tracking-widest text-secondary_text">SYSTEM STATUS</span>
+<span class="px-2 py-0.5 bg-[#BFFF00] text-[#161e00] text-[10px] font-headline font-bold uppercase tracking-widest">LOW RISK</span>
+</div>
+<h1 class="text-4xl md:text-6xl lg:text-[65px] michroma-heading text-[#BFFF00] tracking-tighter leading-[1.05] mt-2 mb-2 whitespace-nowrap">GRID STABLE</h1>
+<p class="font-mono text-sm text-secondary_text">CONFIDENCE SCORE: <span class="text-white">98.2%</span></p>
+</div>
+<div class="flex gap-12 border-t border-outline-variant/30 md:border-t-0 pt-6 md:pt-0 w-full md:w-auto">
+<div class="space-y-1">
+<span class="block text-[10px] font-mono text-secondary_text uppercase tracking-widest">TIME TO POTENTIAL EVENT</span>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-mono font-bold text-white">45</span>
+<span class="text-xl font-mono text-secondary_text">MIN</span>
+</div>
+</div>
+<div class="space-y-1">
+<span class="block text-[10px] font-mono text-secondary_text uppercase tracking-widest">CURRENT FREQUENCY</span>
+<div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-2">
+<span class="text-2xl font-mono font-bold text-[#BFFF00]">60.02</span>
+<span class="text-sm font-mono text-secondary_text">HZ</span>
+<span class="material-symbols-outlined text-[#BFFF00] animate-pulse" data-icon="waves">waves</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Dashboard Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Panel 2: Model Logic Card -->
+<div class="lg:col-span-4 bg-surface-container-low p-6 border border-outline-variant/10 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a]">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-3">
+<div class="p-2 bg-surface-container-highest">
+<span class="material-symbols-outlined text-[#BFFF00]" data-icon="smart_toy">smart_toy</span>
+</div>
+<h3 class="michroma-heading text-[12px]">MODEL LOGIC</h3>
+</div>
+<span class="text-[10px] font-mono text-secondary_text bg-surface-container-highest px-2 py-1">XGBoost v2.4</span>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span class="text-xs text-secondary_text uppercase">Confidence</span>
+<span class="font-mono text-[#BFFF00] font-bold">94%</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span class="text-xs text-secondary_text uppercase">Execution</span>
+<span class="text-xs font-headline font-bold uppercase tracking-widest bg-white/10 px-2 py-0.5">Auto-Pilot</span>
+</div>
+<div class="mt-6 bg-surface-container-lowest p-4 border-l-2 border-outline-variant/30">
+<p class="font-mono text-[11px] leading-relaxed italic text-secondary_text">
+                            &gt; Reasoning: High load predicted due to increased charger activity in Sector 7-G. Mitigation protocol recommended to prevent phase imbalance.
+                        </p>
+</div>
+</div>
+</div>
+<!-- Panel 4: Load Prediction Graph -->
+<div class="lg:col-span-8 bg-surface-container-low p-6 border border-outline-variant/10 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a]">
+<div class="flex items-center justify-between mb-8">
+<h3 class="michroma-heading text-[12px]">LOAD PREDICTION</h3>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-0.5 bg-white"></div>
+<span class="text-[10px] uppercase font-mono text-secondary_text">Current</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-0.5 border-t border-dashed border-[#BFFF00]"></div>
+<span class="text-[10px] uppercase font-mono text-secondary_text">Predicted</span>
+</div>
+</div>
+</div>
+<div class="relative h-48 w-full bg-[#111111] overflow-hidden">
+<!-- Grid Lines -->
+<div class="absolute inset-0 grid grid-cols-6 grid-rows-4">
+<div class="border-r border-b border-[#222222]"></div>
+<div class="border-r border-b border-[#222222]"></div>
+<div class="border-r border-b border-[#222222]"></div>
+<div class="border-r border-b border-[#222222]"></div>
+<div class="border-r border-b border-[#222222]"></div>
+<div class="border-b border-[#222222]"></div>
+<!-- ... more grid rows ... -->
+</div>
+<!-- SVG Chart Representation -->
+<svg class="absolute inset-0 h-full w-full" preserveaspectratio="none">
+<!-- Threshold -->
+<line stroke="#FF4444" stroke-width="1" x1="0" x2="100%" y1="30" y2="30"></line>
+<!-- Current Load Path -->
+<path d="M0,150 L50,140 L100,145 L150,120 L200,125 L250,100 L300,110 L350,90 L400,95" fill="none" stroke="white" stroke-width="2"></path>
+<!-- Predicted Load Path -->
+<path d="M400,95 L450,85 L500,70 L550,50 L600,40 L650,45 L700,60" fill="none" stroke="#BFFF00" stroke-dasharray="4,4" stroke-width="2"></path>
+</svg>
+<div class="absolute top-4 left-4 text-[10px] font-mono text-[#FF4444] uppercase tracking-tighter">THRESHOLD CRITICAL</div>
+</div>
+<div class="flex justify-between mt-4 px-2">
+<span class="text-[10px] font-mono text-secondary_text">08:00</span>
+<span class="text-[10px] font-mono text-secondary_text">12:00</span>
+<span class="text-[10px] font-mono text-secondary_text">16:00</span>
+<span class="text-[10px] font-mono text-secondary_text">20:00</span>
+<span class="text-[10px] font-mono text-secondary_text font-bold text-white underline">NOW</span>
+<span class="text-[10px] font-mono text-secondary_text">00:00</span>
+</div>
+</div>
+<!-- Panel 3: Capacity Overview -->
+<div class="lg:col-span-8 bg-surface-container-low p-6 border border-outline-variant/10 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a]">
+<h3 class="michroma-heading text-[12px] mb-8">CAPACITY OVERVIEW</h3>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-8">
+<div class="space-y-4">
+<div>
+<span class="block text-[10px] text-secondary_text uppercase mb-1">Total Chargers</span>
+<span class="text-3xl font-mono font-bold">12</span>
+</div>
+<div>
+<span class="block text-[10px] text-secondary_text uppercase mb-1">Station Capacity</span>
+<span class="text-3xl font-mono font-bold">240 <span class="text-sm font-normal text-secondary_text">kW</span></span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex gap-4">
+<div>
+<span class="block text-[10px] text-secondary_text uppercase mb-1">Active</span>
+<span class="text-3xl font-mono font-bold text-[#BFFF00]">07</span>
+</div>
+<div>
+<span class="block text-[10px] text-secondary_text uppercase mb-1">Available</span>
+<span class="text-3xl font-mono font-bold text-secondary_text">05</span>
+</div>
+</div>
+<div>
+<span class="block text-[10px] text-secondary_text uppercase mb-1">Remaining Capacity</span>
+<span class="text-3xl font-mono font-bold">89 <span class="text-sm font-normal text-secondary_text">kW</span></span>
+</div>
+</div>
+<div class="col-span-2 md:col-span-1 space-y-4 flex flex-col justify-end">
+<div>
+<div class="flex justify-between items-end mb-2">
+<span class="text-[10px] text-secondary_text uppercase">Utilization</span>
+<span class="text-xl font-mono font-bold text-[#BFFF00]">63%</span>
+</div>
+<div class="h-2 bg-surface-container-highest">
+<div class="h-full bg-[#BFFF00]" style="width: 63%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Panel 5 & 6 Side Column -->
+<div class="lg:col-span-4 space-y-6">
+<!-- Recommended Action Card -->
+<div class="bg-surface-container-low p-6 border-l-4 border-[#FF4444]">
+<div class="flex items-center gap-2 text-[#FF4444] mb-2">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
+<span class="michroma-heading text-[10px]">Recommended Action</span>
+</div>
+<h4 class="michroma-heading text-xl mb-2">REDUCE LOAD</h4>
+<p class="text-xs text-secondary_text mb-6">Predicted load exceeds threshold in T-minus 22 minutes. Shed 2 chargers in Sector B.</p>
+<button class="w-full bg-[#BFFF00] text-[#161e00] font-headline font-bold py-4 uppercase tracking-widest hover:opacity-90 transition-all active:scale-95">
+                        EXECUTE ACTION
+                    </button>
+</div>
+<!-- Control Mode Toggle -->
+<div class="bg-surface-container-low p-6">
+<h3 class="michroma-heading text-[10px] mb-4">Control Mode</h3>
+<div class="flex bg-surface-container-lowest p-1">
+<button class="flex-1 py-2 text-[11px] font-headline font-bold uppercase tracking-widest bg-[#BFFF00] text-[#161e00]">
+                            AUTOMATIC
+                        </button>
+<button class="flex-1 py-2 text-[11px] font-headline font-bold uppercase tracking-widest text-[#888888] hover:text-white">
+                            MANUAL
+                        </button>
+</div>
+<p class="text-[9px] text-[#FFB800] mt-3 uppercase tracking-tighter flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" data-icon="info">info</span>
+                        AI optimization actively managing grid phase.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 pb-safe bg-[#131313]/80 backdrop-blur-xl border-t border-[#444933]/15">
+<a class="flex flex-col items-center justify-center bg-[#BFFF00] text-[#161e00] rounded-none px-6 py-2" href="dashboard.html">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-mono text-[10px] uppercase tracking-widest font-bold">Monitor</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all" href="analytics.html">
+<span class="material-symbols-outlined mb-1" data-icon="analytics">analytics</span>
+<span class="font-mono text-[10px] uppercase tracking-widest">Analytics</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all relative" href="alerts.html">
+<span class="material-symbols-outlined mb-1" data-icon="notifications_active">notifications_active</span>
+<span class="font-mono text-[10px] uppercase tracking-widest">Alerts</span>
+<div class="absolute top-2 right-6 w-1.5 h-1.5 bg-[#FF4444] rounded-full"></div>
+</a>
+<a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all" href="systems.html">
+<span class="material-symbols-outlined mb-1" data-icon="settings_input_component">settings_input_component</span>
+<span class="font-mono text-[10px] uppercase tracking-widest">System</span>
+</a>
+</nav>
+<!-- Confirmation Modal (Hidden State Template) -->
+<div class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-6">
+<div class="bg-[#1A1A1A] border border-[#BFFF00] max-w-md w-full p-8 space-y-6">
+<div class="space-y-2">
+<h2 class="michroma-heading text-xl text-[#BFFF00] mb-2">Confirm Action Execution</h2>
+<p class="text-sm text-secondary_text">Are you sure you want to proceed with shedding 2 chargers in Sector B? This action will temporarily disconnect active charging sessions.</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="font-headline font-bold py-4 border border-[#BFFF00] text-[#BFFF00] text-xs uppercase tracking-widest hover:bg-[#BFFF00]/10 transition-colors">
+                    Cancel
+                </button>
+<button class="font-headline font-bold py-4 bg-[#BFFF00] text-[#161e00] text-xs uppercase tracking-widest active:opacity-80 transition-all">
+                    Confirm Execute
+                </button>
+</div>
+</div>
+</div>
+<!-- Decoration/Texture Elements -->
+<div class="fixed inset-0 pointer-events-none hud-scanline opacity-[0.03] z-[99]"></div>
+<script>
+function logout() {
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem('userRole');
+    window.location.href = 'index.html';
+}
+</script>
+</body></html>

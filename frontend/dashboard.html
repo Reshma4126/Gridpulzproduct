@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GridPulz | Operator Command Center</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --panel: #161b22;
+            --panel-2: #1f2937;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --accent: #22c55e;
+            --danger: #ef4444;
+            --border: #2d3748;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background: radial-gradient(circle at 20% 0%, #111827, var(--bg) 45%);
+            color: var(--text);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            border-right: 1px solid var(--border);
+            background: #0b1220;
+            padding: 24px 16px;
+        }
+
+        .brand {
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #86efac;
+            margin-bottom: 20px;
+        }
+
+        .station-title {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        #sidebar-station-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            word-break: break-word;
+        }
+
+        .nav {
+            display: grid;
+            gap: 8px;
+        }
+
+        .nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: #111827;
+            border: 1px solid #1f2937;
+        }
+
+        .main {
+            padding: 24px;
+        }
+
+        .heading {
+            margin: 0 0 16px;
+            font-size: 1.6rem;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .metric-value {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .sub {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        #ml-alert-banner {
+            margin-top: 10px;
+            background: rgba(239, 68, 68, 0.18);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fecaca;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .chart-wrap {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 340px;
+        }
+
+        .chart-title {
+            margin: 0 0 10px;
+            color: #cbd5e1;
+        }
+
+        @media (max-width: 980px) {
+            .layout { grid-template-columns: 1fr; }
+            .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+            .metrics { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">GridPulz</div>
+            <div class="station-title">Station</div>
+            <div id="sidebar-station-name">Loading...</div>
+
+            <nav class="nav">
+                <a href="dashboard.html">Command Center</a>
+                <a href="login.html">Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <h1 class="heading">Operator Command Center</h1>
+
+            <section class="metrics">
+                <article class="card">
+                    <h3>Current Load</h3>
+                    <p id="current-load" class="metric-value">0 kW</p>
+                    <div class="sub">Max Capacity: <span id="max-capacity">0</span> kW</div>
+                </article>
+
+                <article class="card">
+                    <h3>ML Predicted Load (15m)</h3>
+                    <p id="predicted-load" class="metric-value">0 kW</p>
+                    <div id="ml-alert-banner">High predicted load detected. Review demand balancing.</div>
+                </article>
+
+                <article class="card">
+                    <h3>Active EV Sessions</h3>
+                    <p id="active-sessions" class="metric-value">0</p>
+                    <div class="sub">Total Plugs: <span id="total-plugs">0</span></div>
+                </article>
+            </section>
+
+            <section class="chart-wrap">
+                <h3 class="chart-title">Live Load Stream</h3>
+                <canvas id="loadChart"></canvas>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/operator.js"></script>
+</body>
+</html>

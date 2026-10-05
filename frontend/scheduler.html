@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GRIDPULZ | Priority Scheduler</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#35343a",
+                        "on-surface-variant": "#c3caac",
+                        "surface-dim": "#131318",
+                        "primary-fixed": "#b8f600",
+                        "on-background": "#e4e1e9",
+                        "on-surface": "#e4e1e9",
+                        "outline": "#8d9479",
+                        "background": "#131318",
+                        "error": "#ffb4ab",
+                        "surface": "#131318",
+                        "neon": "#BFFF00",
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(184, 246, 0, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .glass-panel {
+            background: rgba(31, 31, 37, 0.55);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        
+        .pill { border-radius: 9999px; }
+        
+        /* Bar animation */
+        .bar-wrap {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            flex: 1;
+            overflow: hidden;
+        }
+        .bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .queue-item {
+            transition: all 0.3s;
+        }
+        .queue-item.winner { border-color: rgba(34, 197, 94, 0.5); background: rgba(34, 197, 94, 0.05); }
+        .queue-item.loser { border-color: rgba(234, 179, 8, 0.5); filter: brightness(0.7); }
+        
+        .algo-step {
+            transition: all 0.3s;
+            border-left: 2px solid rgba(255,255,255,0.1);
+        }
+        .algo-step.active {
+            border-left-color: #BFFF00;
+            color: white;
+            background: rgba(191,255,0,0.05);
+        }
+        
+        /* Slider styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #BFFF00;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen">
+
+    <!-- Navbar Minimal -->
+    <header class="border-b border-white/5 bg-[#0B0B12] px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <img src="assets/gridpulz_logo.png" alt="GridPulz" class="h-8 mix-blend-lighten opacity-80" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div style="display:none;" class="text-neon font-headline font-bold text-xl tracking-widest uppercase">GridPulz</div>
+            <div class="h-4 w-px bg-white/20 mx-2"></div>
+            <div>
+                <h1 class="text-sm font-headline font-bold text-white uppercase tracking-widest">Priority Scheduler</h1>
+                <p class="text-[10px] text-on-surface-variant/50 tracking-widest uppercase">Network Admin • Simulator</p>
+            </div>
+        </div>
+        
+        <!-- Metrics -->
+        <div class="flex gap-4">
+            <div class="glass-panel px-4 py-2 flex items-center gap-3">
+                <div class="text-[9px] uppercase tracking-widest text-on-surface-variant/50">Vehicles<br>Queued</div>
+                <div id="m-users" class="text-xl font-mono font-bold text-white">0</div>
+            </div>
+            <div class="glass-panel px-4 py-2 flex items-center gap-3">
+                <div class="text-[9px] uppercase tracking-widest text-on-surface-variant/50">Available<br>Slots</div>
+                <div id="m-slots" class="text-xl font-mono font-bold text-neon">0</div>
+            </div>
+            <div class="glass-panel px-4 py-2 flex items-center gap-3">
+                <div class="text-[9px] uppercase tracking-widest text-on-surface-variant/50">Allocs<br>Made</div>
+                <div id="m-alloc" class="text-xl font-mono font-bold text-white">0</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-6 md:p-8 dot-grid min-h-[calc(100vh-80px)]">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- LEFT COLUMN: Stations & Algorithm -->
+            <div class="lg:col-span-4 space-y-6 flex flex-col">
+                
+                <!-- Stations -->
+                <div class="glass-panel p-5">
+                    <h2 class="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/50 mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">ev_station</span> Charging Network
+                    </h2>
+                    <div id="stations-list" class="space-y-3">
+                        <!-- Stations rendered here -->
+                    </div>
+                </div>
+
+                <!-- Add Vehicle Form -->
+                <div class="glass-panel p-5 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-neon/5 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none transition-transform group-hover:scale-150"></div>
+                    
+                    <h2 class="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/50 mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">add_circle</span> Add to Queue
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-on-surface-variant/60 mb-1.5">Driver Name</label>
+                            <input type="text" id="v-name" placeholder="Leave empty for auto-name" class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-neon/50">
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-end mb-1.5">
+                                <label class="block text-[10px] uppercase tracking-widest text-on-surface-variant/60">Battery SoC</label>
+                                <span id="bat-out" class="font-mono text-neon text-sm font-bold">35%</span>
+                            </div>
+                            <input type="range" id="v-bat" min="2" max="95" value="35" class="w-full">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-on-surface-variant/60 mb-1.5">Nearest Target Station</label>
+                            <select id="v-station" class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-neon/50 appearance-none">
+                                <!-- Options rendered by JS -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-on-surface-variant/60 mb-1.5">Pre-book Time <span class="text-white/20">(optional)</span></label>
+                            <input type="datetime-local" id="v-prebook" class="w-full bg-black/20 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-neon/50">
+                        </div>
+                        
+                        <button id="add-btn" class="w-full bg-white/5 border border-white/10 hover:bg-neon/10 hover:border-neon/30 text-neon font-headline font-bold uppercase tracking-widest text-[10px] py-2.5 rounded transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-sm">person_add</span> Enqueue Vehicle
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MIDDLE COLUMN: Queue & Formula -->
+            <div class="lg:col-span-4 space-y-6 flex flex-col">
+                
+                <!-- Priority Queue -->
+                <div class="glass-panel p-5 flex flex-col flex-1 h-[450px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/50 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">reorder</span> Priority Queue
+                        </h2>
+                        
+                        <div class="flex gap-2">
+                            <button id="run-btn" class="bg-neon text-black font-headline font-bold uppercase tracking-widest text-[10px] px-3 py-1.5 rounded hover:bg-[#a6e000] transition-colors flex items-center gap-1 shadow-[0_0_15px_rgba(191,255,0,0.2)]">
+                                <span class="material-symbols-outlined text-sm">play_arrow</span> Run Target
+                            </button>
+                            <button id="reset-btn" class="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-headline font-bold uppercase tracking-widest text-[10px] px-3 py-1.5 rounded transition-colors">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="queue-list" class="flex-1 overflow-y-auto pr-2 space-y-2 pb-2">
+                        <!-- Queue items rendered here -->
+                        <div class="text-center py-10">
+                            <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">format_list_bulleted</span>
+                            <div class="text-[10px] uppercase tracking-widest text-on-surface-variant/40">Queue is empty</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority Formula -->
+                <div class="glass-panel p-5">
+                    <h2 class="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/50 mb-3">Score Formula</h2>
+                    
+                    <div class="font-mono text-xs bg-black/20 p-3 rounded border border-white/5 text-white/80 leading-relaxed">
+                        score = 
+                        <span class="bg-blue-500/10 text-blue-300 border border-blue-500/20 px-1 rounded">(100 - bat%)</span>×0.6 + 
+                        <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-1 rounded">waitMins</span>×0.3 - 
+                        <span class="bg-orange-500/10 text-orange-300 border border-orange-500/20 px-1 rounded">gridLoad%</span>×0.1 +
+                        <span class="bg-neon/10 text-neon border border-neon/20 px-1 rounded">Wt</span>
+                    </div>
+                    <div class="text-[9px] uppercase tracking-widest text-on-surface-variant/40 mt-3 flex flex-col gap-1">
+                        <div><span class="text-blue-300">•</span> Lower battery → highest weight</div>
+                        <div><span class="text-emerald-300">•</span> Longer wait → secondary boost</div>
+                        <div><span class="text-orange-300">•</span> High grid load → station deprioritised</div>
+                        <div><span class="text-neon">•</span> Wt = 0 if pre-booked &gt;15 min away (passive)</div>
+                        <div><span class="text-neon">•</span> Wt ramps up within 15-min buffer window</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Trace & Logs -->
+            <div class="lg:col-span-4 space-y-6 flex flex-col">
+                
+                <!-- Decision Log -->
+                <div class="glass-panel p-5 flex-1 h-[300px] flex flex-col">
+                    <h2 class="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/50 mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">history</span> Allocation Log
+                    </h2>
+                    <div id="decision-log" class="flex-1 overflow-y-auto space-y-2">
+                        <div class="text-center py-8">
+                            <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">receipt_long</span>
+                            <div class="text-[10px] uppercase tracking-widest text-on-surface-variant/40">Waiting for allocation...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Algorithm Trace -->
+                <div class="glass-panel p-5">
+                    <h2 class="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/50 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">memory</span> Logic Trace
+                    </h2>
+                    <div id="algo-trace" class="space-y-1">
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">1. Collect queue + SoC array</div>
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">2. Calculate priority scores</div>
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">3. Sort by urgency (desc)</div>
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">4. Check availability / grid load</div>
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">5. ⏱ Check temporal constraints</div>
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">6. Assign slot to Top(vehicle)</div>
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">7. Overload/Full → Redirect</div>
+                        <div class="algo-step text-[10px] font-mono py-1.5 px-3 text-white/40 rounded-r">8. Repeat for queue items</div>
+                    </div>
+                </div>
+
+            </div>
+            
+        </div>
+    </main>
+
+    <script src="js/scheduler.js"></script>
+</body>
+</html>

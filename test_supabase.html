@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Connection Test</title>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="results"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://jytyvsytvppkkmadnjyo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp5dHl2c3l0dnBwa2ttYWRuanlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4OTc5NTcsImV4cCI6MjA5MTQ3Mzk1N30.f89QHiMr5p9aFg5WuNZ6POVDHXYx1HCIOSq42hE-ZVA';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const results = document.getElementById('results');
+
+        function log(message) {
+            console.log(message);
+            results.innerHTML += '<p>' + message + '</p>';
+        }
+
+        async function testConnection() {
+            log('Testing Supabase connection...');
+            
+            try {
+                // Test 1: Check if we can get the current session
+                const { data: session, error: sessionError } = await supabase.auth.getSession();
+                log('Session test: ' + (sessionError ? 'ERROR: ' + sessionError.message : 'SUCCESS'));
+                
+                // Test 2: Try to sign up a test user
+                const testEmail = 'test' + Date.now() + '@example.com';
+                const testPassword = 'Test123456!';
+                
+                log('Attempting to sign up test user: ' + testEmail);
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                    email: testEmail,
+                    password: testPassword,
+                    options: { data: { full_name: 'Test User', role: 'user' } }
+                });
+                
+                if (signUpError) {
+                    log('Signup ERROR: ' + signUpError.message);
+                } else {
+                    log('Signup SUCCESS: User created with ID ' + signUpData.user.id);
+                    log('Email confirmation required: ' + (signUpData.user.email_confirmed_at ? 'NO' : 'YES'));
+                }
+                
+                // Test 3: Try to sign in with the test user
+                if (!signUpError) {
+                    log('Attempting to sign in with test user...');
+                    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                        email: testEmail,
+                        password: testPassword
+                    });
+                    
+                    if (signInError) {
+                        log('Signin ERROR: ' + signInError.message);
+                    } else {
+                        log('Signin SUCCESS: User logged in');
+                    }
+                }
+                
+            } catch (error) {
+                log('Unexpected error: ' + error.message);
+            }
+        }
+
+        // Run the test
+        testConnection();
+    </script>
+</body>
+</html>

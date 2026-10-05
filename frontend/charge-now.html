@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GRIDPULZ | EV Driver Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Michroma&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#35343a",
+                        "on-surface-variant": "#c3caac",
+                        "surface-dim": "#131318",
+                        "primary-fixed": "#b8f600",
+                        "on-background": "#e4e1e9",
+                        "on-surface": "#e4e1e9",
+                        "outline": "#8d9479",
+                        "background": "#131318",
+                        "error": "#ffb4ab",
+                        "surface": "#131318",
+                        "surface-container": "#1f1f25",
+                        "neon": "#BFFF00",
+                    },
+                    fontFamily: {
+                        "headline": ["Michroma", "monospace"],
+                        "body": ["Space Grotesk", "Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "Fira Code", "monospace"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .dot-grid {
+            background-image: radial-gradient(rgba(184, 246, 0, 0.06) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        .glass-card {
+            background: rgba(31, 31, 37, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        @keyframes pulse-glow {
+            0%   { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0.4); }
+            70%  { box-shadow: 0 0 0 8px rgba(191, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(191, 255, 0, 0); }
+        }
+        .status-pulse { animation: pulse-glow 2s infinite; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .fade-up-d1 { animation-delay: 0.1s; opacity: 0; }
+        .fade-up-d2 { animation-delay: 0.2s; opacity: 0; }
+        .fade-up-d3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* SoC slider */
+        input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 8px; border-radius: 4px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #BFFF00 70%, #22c55e 100%);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #BFFF00; border: 3px solid #0A0A0F;
+            margin-top: -7px; cursor: pointer;
+            box-shadow: 0 0 10px rgba(191,255,0,0.5);
+        }
+        input[type="range"]::-moz-range-track {
+            height: 8px; border-radius: 4px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #BFFF00 70%, #22c55e 100%);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #BFFF00; border: 3px solid #0A0A0F;
+            cursor: pointer; box-shadow: 0 0 10px rgba(191,255,0,0.5);
+        }
+        .nav-link-active { background: rgba(191,255,0,0.1); border-color: rgba(191,255,0,0.3); color: #BFFF00; }
+
+        /* Toast notification */
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(100%); }
+        }
+        .toast-enter { animation: toastIn 0.35s ease-out forwards; }
+        .toast-exit  { animation: toastOut 0.3s ease-in forwards; }
+
+        /* Leaflet popup dark theme */
+        .leaflet-popup-content-wrapper { background: #1f1f25 !important; color: #fff !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; border: 1px solid rgba(255,255,255,0.05) !important; }
+        .leaflet-popup-tip { background: #1f1f25 !important; }
+        .leaflet-popup-close-button { color: #fff6 !important; }
+        .leaflet-popup-close-button:hover { color: #fff !important; }
+    </style>
+</head>
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen overflow-x-hidden">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none w-80"></div>
+
+    <div class="flex min-h-screen">
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="w-[260px] min-h-screen border-r border-white/5 bg-[#0B0B12] flex flex-col p-5 shrink-0">
+            <div class="mb-6">
+                <a href="index.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <img src="assets/gridpulz_logo.png" alt="GridPulz" class="h-12 mix-blend-lighten">
+                </a>
+            </div>
+
+            <div class="mb-8">
+                <div class="text-[9px] uppercase tracking-[3px] text-on-surface-variant/60 mb-1">EV Driver</div>
+                <div id="sidebar-driver-name" class="text-sm font-headline font-semibold text-white truncate">Loading...</div>
+                <div id="sidebar-driver-email" class="text-[11px] text-on-surface-variant/50 truncate mt-0.5"></div>
+            </div>
+
+            <nav class="flex flex-col gap-2 flex-1">
+                <a href="user-dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-headline font-bold uppercase tracking-widest border transition-all nav-link-active">
+                    <span class="material-symbols-outlined text-base">dashboard</span> Dashboard
+                </a>
+                <a href="my-bookings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/60 border border-transparent hover:border-white/5 hover:text-white transition-all">
+                    <span class="material-symbols-outlined text-base">book_online</span> My Bookings
+                </a>
+
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/60 border border-transparent hover:border-white/5 hover:text-white transition-all">
+                    <span class="material-symbols-outlined text-base">settings</span> Settings
+                </a>
+                <a href="operator-dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant/60 border border-transparent hover:border-white/5 hover:text-white transition-all">
+                    <span class="material-symbols-outlined text-base">monitoring</span> Operator Dash
+                </a>
+            </nav>
+
+            <a href="#" id="logout-btn" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-headline font-bold uppercase tracking-widest text-red-400/70 border border-transparent hover:border-red-500/20 hover:bg-red-500/5 transition-all mt-auto">
+                <span class="material-symbols-outlined text-base">logout</span> Logout
+            </a>
+        </aside>
+
+        <!-- ============ MAIN CONTENT ============ -->
+        <main class="flex-1 relative dot-grid">
+            <div class="absolute top-0 left-1/3 w-[600px] h-[600px] bg-neon opacity-[0.015] blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div class="max-w-6xl mx-auto p-6 md:p-10 space-y-6">
+                <!-- Page Title -->
+                <div class="fade-up flex items-center gap-4">
+                    <a href="user-dashboard.html" class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </a>
+                    <div>
+                        <h1 class="font-headline text-2xl font-bold text-white">Charge Now</h1>
+                    </div>
+                </div>
+
+                <!-- ===== TAB 1: CHARGE NOW ===== -->
+                <div id="tab-content-charge" class="fade-up fade-up-d3 space-y-6">
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 max-w-5xl">
+                        <!-- Left Panel: Controls (Col Span 2) -->
+                        <div class="lg:col-span-2 glass-card rounded-2xl border border-white/5 p-6 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center gap-2 mb-6">
+                                    <span class="material-symbols-outlined text-neon text-xl">bolt</span>
+                                    <h2 class="font-headline font-bold text-sm uppercase tracking-widest text-white">Immediate Allocation</h2>
+                                </div>
+                                
+                                <!-- SoC Slider -->
+                                <div class="mb-6 bg-white/[0.02] p-5 rounded-xl border border-white/5">
+                                    <label class="flex justify-between items-end mb-4">
+                                        <span class="text-[10px] uppercase tracking-widest text-on-surface-variant/60 font-bold">Current SoC%</span>
+                                        <span id="soc-value" class="text-3xl font-mono font-bold text-neon shadow-neon drop-shadow-md">72<span class="text-lg text-neon/50">%</span></span>
+                                    </label>
+                                    <input type="range" id="soc-slider" min="0" max="100" value="72" class="w-full cursor-pointer h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full appearance-none outline-none">
+                                </div>
+        
+                                <!-- GPS location -->
+                                <div class="flex items-center gap-2 p-3 rounded-lg bg-white/[0.03] border border-white/5 mb-6">
+                                    <span class="material-symbols-outlined text-on-surface-variant/40 text-sm">my_location</span>
+                                    <span id="current-location" class="text-[10px] uppercase font-mono tracking-widest text-on-surface-variant/60 flex-1">Looking for GPS...</span>
+                                    <button id="gps-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/5 border border-white/10 text-[9px] font-headline font-bold uppercase tracking-widest text-neon hover:bg-neon/10 hover:border-neon/30 transition-all active:scale-95">
+                                        <span class="material-symbols-outlined text-[10px]">gps_fixed</span> GPS
+                                    </button>
+                                </div>
+                            </div>
+    
+                            <button id="request-slot-btn" class="w-full bg-neon text-[#161e00] font-headline font-bold uppercase tracking-widest text-xs py-4 rounded-xl hover:bg-neon/90 hover:shadow-[0_0_20px_rgba(191,255,0,0.3)] transition-all flex items-center justify-center gap-2 active:scale-95 group mt-4">
+                                Request Charging Slot
+                                <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                            </button>
+                        </div>
+
+                        <!-- Right Panel: Dynamic Map (Col Span 3) -->
+                        <div class="lg:col-span-3 glass-card rounded-2xl border border-white/5 p-0 overflow-hidden relative min-h-[350px]">
+                            <div class="absolute top-4 left-4 z-10 glass-card px-3 py-1.5 rounded text-[10px] uppercase tracking-widest text-white/90 border border-white/10 font-bold shadow-xl flex items-center gap-2 pointer-events-none">
+                                <span class="material-symbols-outlined text-[14px] text-neon">public</span> Live Grid Map
+                            </div>
+                            <!-- Realtime Connection Status -->
+                            <div id="rt-status" class="hidden absolute top-4 right-4 z-10 glass-card px-3 py-1.5 rounded border border-white/10 shadow-xl flex items-center gap-2 pointer-events-none">
+                                <span class="rt-dot" style="width:6px;height:6px;border-radius:50%;background:#6b7280;"></span>
+                                <span class="rt-label text-[8px] uppercase tracking-[2px] font-bold text-white/60" style="font-family:'Space Grotesk',sans-serif;">OFFLINE</span>
+                            </div>
+                            <div id="live-map" class="absolute inset-0 z-0 bg-[#0B0B12]"></div>
+                        </div>
+                    </div>
+
+                    <!-- Grid Safeguard Reroute Alert Banner -->
+                    <div id="reroute-alert" class="hidden glass-card rounded-2xl border border-red-500/20 bg-red-500/[0.03] p-5 max-w-5xl overflow-hidden relative" style="animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+                        <!-- Dynamic content injected by dashboard.js -->
+                    </div>
+
+                    <!-- Result Status Card -->
+                    <div id="booking-result" class="hidden glass-card rounded-2xl border border-white/5 p-6 max-w-3xl overflow-hidden relative">
+                        <!-- Dynamic content injected here by dashboard.js -->
+                    </div>
+
+                </div>
+
+                <!-- ===== TAB 2: PREBOOK SLOTS ===== -->
+                <!-- ===== TAB 3: STATION MAP ===== -->
+                </main>
+    </div>
+
+
+    <!-- Confirm Booking Modal -->
+    <div id="confirm-booking-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="glass-card rounded-2xl border border-white/10 p-6 w-full max-w-sm fade-up shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-neon/10 rounded-full blur-2xl pointer-events-none -mr-10 -mt-10"></div>
+            <h3 class="font-headline font-bold text-white text-lg flex items-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-neon">help_center</span> Confirm Request
+            </h3>
+            <p class="text-xs text-on-surface-variant/70 font-body mb-6">
+                Are you sure you want to request an immediate charging slot?
+            </p>
+            <div class="flex items-center gap-3 w-full">
+                <button id="modal-cancel-btn" class="flex-1 py-2.5 rounded-lg border border-white/10 text-xs font-bold text-white/70 hover:bg-white/5 transition-colors">Cancel</button>
+                <button id="modal-confirm-btn" class="flex-1 py-2.5 rounded-lg bg-neon text-[#131318] text-xs font-bold shadow-[0_0_15px_rgba(191,255,0,0.2)] hover:bg-neon/90 transition-all font-headline uppercase tracking-widest">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/stations-realtime.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
