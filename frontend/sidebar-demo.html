@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GridPulz Sidebar Navigation - Design System</title>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Michroma', monospace;
+            background: #0A0A0F;
+            color: #e0e0e0;
+            padding: 40px;
+        }
+
+        .demo-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .demo-header {
+            margin-bottom: 40px;
+        }
+
+        .demo-header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            color: #CCFF00;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .demo-header p {
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 0.1em;
+        }
+
+        .variants-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .variant-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .variant-group h2 {
+            font-size: 18px;
+            color: #CCFF00;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 10px;
+        }
+
+        .variant-states {
+            display: flex;
+            gap: 20px;
+        }
+
+        .state-showcase {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+        }
+
+        .state-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .sidebar-preview {
+            height: 500px;
+            background: #131313;
+            border: 1px solid #2a2a2a;
+            border-radius: 3px;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Mock dashboard content on the right */
+        .mock-content {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(20, 20, 25, 0.8), rgba(30, 30, 35, 0.8));
+            border-left: 1px solid #2a2a2a;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        .mock-header {
+            height: 20px;
+            background: rgba(204, 255, 0, 0.1);
+            border-radius: 3px;
+            border: 1px solid rgba(204, 255, 0, 0.2);
+        }
+
+        .mock-card {
+            height: 60px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .integration-section {
+            background: rgba(20, 20, 25, 0.6);
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .integration-section h3 {
+            font-size: 16px;
+            color: #CCFF00;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .code-block {
+            background: #0A0A0F;
+            border: 1px solid #2a2a2a;
+            border-radius: 3px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .code-block code {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #CCFF00;
+            line-height: 1.6;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            padding: 12px;
+            background: rgba(204, 255, 0, 0.04);
+            border-left: 2px solid #CCFF00;
+            border-radius: 2px;
+        }
+
+        .feature-item strong {
+            color: #CCFF00;
+        }
+
+        .feature-item p {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* Utility: make mock sidebar hover-able for demo */
+        .sidebar-preview .gp-sidebar {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- Header -->
+        <div class="demo-header">
+            <h1>GridPulz Sidebar Navigation</h1>
+            <p>Dark-themed collapsible navigation with neon green accent | Hover to expand, tap on mobile</p>
+        </div>
+
+        <!-- Variant A: User Dashboard -->
+        <div class="variants-grid">
+            <!-- VARIANT A: User Dashboard -->
+            <div class="variant-group">
+                <h2>Variant A: User Dashboard</h2>
+                <div class="variant-states">
+                    <!-- A: Collapsed -->
+                    <div class="state-showcase">
+                        <div class="state-label">Collapsed (Default)</div>
+                        <div class="sidebar-preview">
+                            <aside class="gp-sidebar" id="sidebar-a-collapsed">
+                                <div class="gp-sidebar__logo-zone">
+                                    <div class="gp-sidebar__logo-mark">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z" stroke-width="1.5"/>
+                                        </svg>
+                                    </div>
+                                    <div class="gp-sidebar__brand">GridPulz</div>
+                                </div>
+                                <nav class="gp-sidebar__nav">
+                                    <!-- Main section -->
+                                    <span class="gp-sidebar__sec-label">Main</span>
+                                    <button class="gp-sidebar__nav-item active">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h10a2 2 0 002-2v-10"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Dashboard</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M13 2L3 14h4v8h10v-8h4L13 2z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Charge Now</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                                <path d="M16 2v4M8 2v4M3 10h18"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Prebook</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Station Map</span>
+                                    </button>
+
+                                    <!-- Config section -->
+                                    <span class="gp-sidebar__sec-label">Config</span>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M8 6h12M8 12h12M8 18h12"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">My Bookings</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <circle cx="12" cy="12" r="3"/>
+                                                <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6m-15.78 7.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Settings</span>
+                                    </button>
+                                </nav>
+                                <div class="gp-sidebar__separator"></div>
+                                <div class="gp-sidebar__logout-zone">
+                                    <button class="gp-sidebar__nav-item logout">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M10 3H4a2 2 0 00-2 2v14a2 2 0 002 2h6m7-4l4-4m0 0l-4-4m4 4H9"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Logout</span>
+                                    </button>
+                                </div>
+                            </aside>
+                            <div class="mock-content">
+                                <div class="mock-header"></div>
+                                <div class="mock-card"></div>
+                                <div class="mock-card"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- A: Expanded -->
+                    <div class="state-showcase">
+                        <div class="state-label">Expanded (Hover)</div>
+                        <div class="sidebar-preview">
+                            <aside class="gp-sidebar expanded">
+                                <div class="gp-sidebar__logo-zone">
+                                    <div class="gp-sidebar__logo-mark">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="gp-sidebar__brand">GridPulz</div>
+                                </div>
+                                <nav class="gp-sidebar__nav">
+                                    <span class="gp-sidebar__sec-label">Main</span>
+                                    <button class="gp-sidebar__nav-item active">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M3 12l9-9 9 9M5 10v10a2 2 0 002 2h10a2 2 0 002-2v-10"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Dashboard</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M13 2L3 14h4v8h10v-8h4L13 2z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Charge Now</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                                <path d="M16 2v4M8 2v4M3 10h18"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Prebook</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Station Map</span>
+                                    </button>
+                                    <span class="gp-sidebar__sec-label">Config</span>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M8 6h12M8 12h12M8 18h12"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">My Bookings</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <circle cx="12" cy="12" r="3"/>
+                                                <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6m-15.78 7.78l4.24-4.24m5.08-5.08l4.24-4.24"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Settings</span>
+                                    </button>
+                                </nav>
+                                <div class="gp-sidebar__separator"></div>
+                                <div class="gp-sidebar__logout-zone">
+                                    <button class="gp-sidebar__nav-item logout">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M10 3H4a2 2 0 00-2 2v14a2 2 0 002 2h6m7-4l4-4m0 0l-4-4m4 4H9"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Logout</span>
+                                    </button>
+                                </div>
+                            </aside>
+                            <div class="mock-content">
+                                <div class="mock-header"></div>
+                                <div class="mock-card"></div>
+                                <div class="mock-card"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VARIANT B: Operator Dashboard -->
+            <div class="variant-group">
+                <h2>Variant B: Operator Dashboard</h2>
+                <div class="variant-states">
+                    <!-- B: Collapsed -->
+                    <div class="state-showcase">
+                        <div class="state-label">Collapsed (Default)</div>
+                        <div class="sidebar-preview">
+                            <aside class="gp-sidebar">
+                                <div class="gp-sidebar__logo-zone">
+                                    <div class="gp-sidebar__logo-mark">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z" stroke-width="1.5"/>
+                                        </svg>
+                                    </div>
+                                    <div class="gp-sidebar__brand">GridPulz</div>
+                                </div>
+                                <nav class="gp-sidebar__nav">
+                                    <span class="gp-sidebar__sec-label">Control</span>
+                                    <button class="gp-sidebar__nav-item active">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                                                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Dashboard</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M9 12l2 2 4-4m7-4a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Operator</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <circle cx="12" cy="12" r="9"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Scheduler</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Alerts</span>
+                                        <span class="gp-sidebar__badge"></span>
+                                    </button>
+
+                                    <span class="gp-sidebar__sec-label">Infrastructure</span>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <rect x="2" y="3" width="20" height="5"/>
+                                                <path d="M6 8v2m6-2v2m6-2v2M2 15h20v2H2zm0 4h20v2H2z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Systems</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3"/>
+                                                <polyline points="12 12 20 7.5M12 12 4 7.5M12 12 12 21"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Analytics</span>
+                                    </button>
+                                </nav>
+                                <div class="gp-sidebar__separator"></div>
+                                <div class="gp-sidebar__logout-zone">
+                                    <button class="gp-sidebar__nav-item logout">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M10 3H4a2 2 0 00-2 2v14a2 2 0 002 2h6m7-4l4-4m0 0l-4-4m4 4H9"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Logout</span>
+                                    </button>
+                                </div>
+                            </aside>
+                            <div class="mock-content">
+                                <div class="mock-header"></div>
+                                <div class="mock-card"></div>
+                                <div class="mock-card"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- B: Expanded -->
+                    <div class="state-showcase">
+                        <div class="state-label">Expanded (Hover)</div>
+                        <div class="sidebar-preview">
+                            <aside class="gp-sidebar expanded">
+                                <div class="gp-sidebar__logo-zone">
+                                    <div class="gp-sidebar__logo-mark">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="gp-sidebar__brand">GridPulz</div>
+                                </div>
+                                <nav class="gp-sidebar__nav">
+                                    <span class="gp-sidebar__sec-label">Control</span>
+                                    <button class="gp-sidebar__nav-item active">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                                                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Dashboard</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M9 12l2 2 4-4m7-4a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Operator</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <circle cx="12" cy="12" r="9"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Scheduler</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Alerts</span>
+                                        <span class="gp-sidebar__badge"></span>
+                                    </button>
+                                    <span class="gp-sidebar__sec-label">Infrastructure</span>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <rect x="2" y="3" width="20" height="5"/>
+                                                <path d="M6 8v2m6-2v2m6-2v2M2 15h20v2H2zm0 4h20v2H2z"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Systems</span>
+                                    </button>
+                                    <button class="gp-sidebar__nav-item">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3"/>
+                                                <polyline points="12 12 20 7.5M12 12 4 7.5M12 12 12 21"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Analytics</span>
+                                    </button>
+                                </nav>
+                                <div class="gp-sidebar__separator"></div>
+                                <div class="gp-sidebar__logout-zone">
+                                    <button class="gp-sidebar__nav-item logout">
+                                        <span class="gp-sidebar__nav-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                                <path d="M10 3H4a2 2 0 00-2 2v14a2 2 0 002 2h6m7-4l4-4m0 0l-4-4m4 4H9"/>
+                                            </svg>
+                                        </span>
+                                        <span class="gp-sidebar__nav-label">Logout</span>
+                                    </button>
+                                </div>
+                            </aside>
+                            <div class="mock-content">
+                                <div class="mock-header"></div>
+                                <div class="mock-card"></div>
+                                <div class="mock-card"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Guide -->
+        <div class="integration-section">
+            <h3>Integration Guide</h3>
+            <p>Copy the CSS file to your project and add the HTML structure to your pages:</p>
+            
+            <div class="code-block">
+                <code>&lt;!-- Link the CSS in your &lt;head&gt; --&gt;<br>
+&lt;link rel="stylesheet" href="components/sidebar.css"&gt;<br>
+<br>
+&lt;!-- Place sidebar in your page (before main content) --&gt;<br>
+&lt;aside class="gp-sidebar" id="sidebar"&gt;<br>
+&nbsp;&nbsp;&lt;!-- Logo, nav, logout sections --&gt;<br>
+&lt;/aside&gt;</code>
+            </div>
+
+            <h3 style="margin-top: 30px;">JavaScript: Hover/Tap Toggle</h3>
+            <div class="code-block">
+                <code>const sidebar = document.getElementById('sidebar');<br>
+<br>
+// Desktop: hover to expand<br>
+sidebar.addEventListener('mouseenter', () =&gt; sidebar.classList.add('expanded'));<br>
+sidebar.addEventListener('mouseleave', () =&gt; sidebar.classList.remove('expanded'));<br>
+<br>
+// Mobile: tap to toggle<br>
+sidebar.addEventListener('click', (e) =&gt; {<br>
+&nbsp;&nbsp;if (e.target === sidebar) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sidebar.classList.toggle('expanded');<br>
+&nbsp;&nbsp;}<br>
+});</code>
+            </div>
+
+            <h3 style="margin-top: 30px;">Key Features</h3>
+            <div class="features-list">
+                <div class="feature-item">
+                    <strong>Responsive</strong>
+                    <p>Auto-toggles to overlay mode on mobile/tablet. Fixed position on desktop.</p>
+                </div>
+                <div class="feature-item">
+                    <strong>Smooth Transitions</strong>
+                    <p>0.25s cubic-bezier easing for width & opacity changes</p>
+                </div>
+                <div class="feature-item">
+                    <strong>Active State</strong>
+                    <p>Neon green glow, left border indicator, highlight background</p>
+                </div>
+                <div class="feature-item">
+                    <strong>Badge Support</strong>
+                    <p>Red alert dot for unread items (e.g., Alerts with notifications)</p>
+                </div>
+                <div class="feature-item">
+                    <strong>Accessibility</strong>
+                    <p>Semantic button elements, no JavaScript for basic structure</p>
+                </div>
+                <div class="feature-item">
+                    <strong>Brand Consistency</strong>
+                    <p>Michroma font, #CCFF00 accent, 0A0A0F dark background</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Desktop hover + mobile tap support
+        document.querySelectorAll('.gp-sidebar').forEach(sidebar => {
+            // Desktop: hover to expand
+            sidebar.addEventListener('mouseenter', () => {
+                sidebar.classList.add('expanded');
+            });
+
+            sidebar.addEventListener('mouseleave', () => {
+                sidebar.classList.remove('expanded');
+            });
+
+            // Mobile: tap on empty space to toggle
+            sidebar.addEventListener('click', (e) => {
+                if (e.target === sidebar || e.target === sidebar.querySelector('.gp-sidebar__nav')) {
+                    sidebar.classList.toggle('expanded');
+                }
+            });
+        });
+
+        // Nav item click handlers (you would link to pages here)
+        document.querySelectorAll('.gp-sidebar__nav-item:not(.logout)').forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Remove active from siblings
+                const parent = item.closest('nav');
+                parent.querySelectorAll('.gp-sidebar__nav-item').forEach(i => i.classList.remove('active'));
+                // Add active to clicked
+                item.classList.add('active');
+            });
+        });
+
+        // Logout handlers
+        document.querySelectorAll('.gp-sidebar__nav-item.logout').forEach(btn => {
+            btn.addEventListener('click', () => {
+                alert('Logout clicked - implement your logout logic here');
+            });
+        });
+    </script>
+</body>
+</html>

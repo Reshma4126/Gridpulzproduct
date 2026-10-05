@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>GridPulz - Systems</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="components/sidebar.css">
+    <link rel="stylesheet" href="components/top-nav-enhancements.css">
+    <link rel="stylesheet" href="components/font-theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neon: '#CCFF00',
+                        alert: '#FF4444',
+                        dark: {
+                            bg: '#131313',
+                            surface: '#1b1b1b',
+                            border: '#353535',
+                        },
+                        muted: '#aaaaaa',
+                    },
+                    fontFamily: {
+                        headline: ['Michroma', 'sans-serif'],
+                        body: ['Josefin Sans', 'sans-serif'],
+                        michroma: ['Michroma', 'sans-serif'],
+                    },
+                    keyframes: {
+                        pulse_neon: {
+                            '0%,100%': { boxShadow: '0 0 0 0 rgba(204,255,0,0.3)' },
+                            '50%':      { boxShadow: '0 0 0 8px rgba(204,255,0,0)' },
+                        },
+                        fadeIn: {
+                            from: { opacity: '0', transform: 'translateY(10px)' },
+                            to:   { opacity: '1', transform: 'translateY(0)' },
+                        },
+                    },
+                    animation: {
+                        pulse_neon: 'pulse_neon 2s ease-in-out infinite',
+                        fadeIn:      'fadeIn 0.5s ease forwards',
+                    },
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Josefin+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Josefin Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .brand-logo, .stat-val, .brand-name { font-family: 'Michroma', sans-serif !important; }
+        body {
+            display: flex;
+            flex-direction: column;
+            min-width: 1280px;
+            min-height: 100vh;
+            overflow-x: auto;
+            background-color: #131313;
+            color: #ffffff;
+        }
+        #top-nav { display: flex; align-items: center; justify-content: space-between; height: 60px; padding: 0 24px; background: #1A1A1A; border-bottom: 1px solid #353535; z-index: 200; position: sticky; top: 0; flex-shrink: 0; }
+        #page-body { display: flex; flex: 1; min-height: 0; }
+        #main-content { 
+            flex: 1; 
+            padding: 32px 40px; 
+            background: var(--bg-main); 
+            min-height: calc(100vh - 60px); 
+            overflow-y: auto; 
+            margin-left: 68px; 
+            transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .gp-sidebar.expanded + #main-content {
+            margin-left: 220px;
+        }
+        @media (max-width: 1024px) {
+            #main-content { margin-left: 0; }
+            .gp-sidebar.expanded + #main-content { margin-left: 0; }
+        }
+        .nav-brand { display: flex; align-items: center; gap: 12px; }
+        .nav-logo { width: 32px; height: 32px; object-fit: contain; }
+        .brand-name { font-family: 'Michroma', sans-serif; color: #CCFF00; letter-spacing: .18em; font-size: 14px; }
+        .profile-wrapper { position: relative; }
+        .avatar { width: 36px; height: 36px; border-radius: 9999px; background: rgba(204,255,0,.12); border: 1px solid rgba(204,255,0,.3); color: #CCFF00; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .avatar img { width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; }
+        .nav-profile { cursor: pointer; }
+        .profile-dropdown { position: absolute; top: calc(100% + 10px); right: 0; width: 240px; background: #1e1e1e; border: 1px solid #353535; border-radius: 12px; padding: 8px; display: none; z-index: 9999; }
+        .profile-dropdown.open { display: block; }
+        .dropdown-header { display: flex; gap: 10px; align-items: center; padding: 8px 12px; }
+        .avatar-lg { width: 36px; height: 36px; border-radius: 9999px; background: rgba(204,255,0,.12); border: 1px solid rgba(204,255,0,.3); color: #CCFF00; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .avatar-lg img { width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; }
+        .dd-name { font-size: 13px; color: #fff; margin: 0; }
+        .dd-email { font-size: 12px; color: #aaa; margin: 2px 0 0; }
+        .dd-divider { border: 0; border-top: 1px solid #353535; margin: 8px 0; }
+        .dd-item { display: block; padding: 9px 12px; border-radius: 8px; color: #ccc; font-size: 13px; text-decoration: none; }
+        .dd-item:hover { background: #2a2a2a; color: #fff; }
+        .dd-logout { color: #FF4444; width: 100%; text-align: left; background: transparent; border: 0; }
+        .back-btn { margin: 0 16px 16px; padding: 8px 12px; background: #222; border: 1px solid #353535; color: #888; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: 'Poppins', sans-serif; }
+        .logout-btn { margin-top: auto; margin: auto 16px 16px; padding: 10px; border: 1px solid rgba(255,68,68,0.33); color: #FF4444; border-radius: 8px; background: transparent; cursor: pointer; font-family: 'Poppins', sans-serif; }
+        .nav-links { display: flex; flex-direction: column; gap: 4px; }
+        .nav-links a { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #aaa; border-left: 3px solid transparent; text-decoration: none; font-family: 'Poppins', sans-serif !important; font-size: 14px; }
+        .nav-links a.active { background: rgba(204,255,0,.08); border-left-color: #CCFF00; color: #CCFF00; }
+        #top-nav, #top-nav *, #sidebar, #sidebar *, .profile-dropdown, .profile-dropdown * { font-family: 'Michroma', sans-serif !important; }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.08) 0px,
+                rgba(0,0,0,0.08) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            z-index: 9999;
+        }
+
+        .card-glow:hover {
+            box-shadow: 0 0 24px rgba(204,255,0,0.12), 0 0 0 1px rgba(204,255,0,0.2);
+        }
+
+        .stat-val {
+            font-size: 2.8rem;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -0.5px;
+            color: #CCFF00;
+        }
+
+        .nav-logo-text {
+            letter-spacing: 3px;
+            font-size: 1.5rem;
+            line-height: 1;
+            font-weight: 700;
+            color: #CCFF00;
+        }
+
+        .section-label {
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #aaaaaa;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #CCFF00;
+            animation: pulse_neon 2s infinite;
+        }
+
+        .tag {
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .tag-green  { background: rgba(204,255,0,0.15); color: #CCFF00; border: 1px solid rgba(204,255,0,0.3); }
+        .tag-yellow { background: rgba(204,255,0,0.1); color: #CCFF00; border: 1px solid rgba(204,255,0,0.25); }
+        .tag-red    { background: rgba(255,68,68,0.15); color: #FF4444; border: 1px solid rgba(255,68,68,0.3); }
+
+        .progress-bar-track {
+            background: #353535;
+            border-radius: 9999px;
+            height: 6px;
+            overflow: hidden;
+            border: 1px solid #404040;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.8s ease, background 0.3s ease;
+            background: #CCFF00;
+        }
+
+        .progress-bar-fill.warn {
+            background: #FFA500;
+        }
+
+        .progress-bar-fill.alert {
+            background: #FF4444;
+        }
+
+        .animate-in { animation: fadeIn 0.5s ease forwards; }
+
+        a { color: #CCFF00; transition: color 0.2s ease; }
+        a:hover { color: #E6FF1A; }
+    </style>
+</head>
+<body class="dark font-sans text-white min-h-screen min-w-[1440px] overflow-x-auto">
+
+    <header id="top-nav">
+        <div class="nav-brand">
+            <img src="assets/gridpulz_logo.png" alt="GridPulz" class="nav-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span class="brand-name">GridPulz</span>
+        </div>
+        <div class="profile-wrapper">
+            <div class="nav-profile" id="profileTrigger" onclick="toggleProfileDropdown()">
+                <img src="assets/user.png" alt="Profile" class="avatar">
+            </div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="dropdown-header">
+                    <img src="assets/user.png" alt="Profile" class="avatar-lg">
+                    <div>
+                        <p class="dd-name">Station Operator</p>
+                        <p class="dd-email">sarz@gmail.com</p>
+                    </div>
+                </div>
+                <hr class="dd-divider">
+                <a href="profile.html" class="dd-item">My Profile</a>
+                <a href="settings.html" class="dd-item">Settings</a>
+                <hr class="dd-divider">
+                <button onclick="handleLogout()" class="dd-item dd-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="page-body">
+    <aside class="gp-sidebar" id="main-sidebar">
+        <div class="gp-sidebar__logo-zone">
+            <div class="gp-sidebar__logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z"/></svg></div>
+            <div class="gp-sidebar__brand">GridPulz</div>
+        </div>
+        <nav class="gp-sidebar__nav">
+            <span class="gp-sidebar__sec-label">Control</span>
+            <button class="gp-sidebar__nav-item" data-page="dashboard">
+                <span class="gp-sidebar__nav-icon"><img src="assets/dashboard.png" alt="Dashboard icon"></span>
+                <span class="gp-sidebar__nav-label">Dashboard</span>
+            </button>
+            <button class="gp-sidebar__nav-item" data-page="operator-dashboard">
+                <span class="gp-sidebar__nav-icon"><img src="assets/operator.png" alt="Operator icon"></span>
+                <span class="gp-sidebar__nav-label">Operator</span>
+            </button>
+            <button class="gp-sidebar__nav-item" data-page="scheduler">
+                <span class="gp-sidebar__nav-icon"><img src="assets/scheduler.png" alt="Scheduler icon"></span>
+                <span class="gp-sidebar__nav-label">Scheduler</span>
+            </button>
+            <button class="gp-sidebar__nav-item" data-page="alerts">
+                <span class="gp-sidebar__nav-icon"><img src="assets/alerts.png" alt="Alerts icon"></span>
+                <span class="gp-sidebar__nav-label">Alerts</span>
+                <span class="gp-sidebar__badge" id="alerts-badge" style="display:none;"></span>
+            </button>
+            <span class="gp-sidebar__sec-label">Infrastructure</span>
+            <button class="gp-sidebar__nav-item" data-page="grid-management">
+                <span class="gp-sidebar__nav-icon"><img src="assets/network.png" alt="Grid Management icon"></span>
+                <span class="gp-sidebar__nav-label">Grid Management</span>
+            </button>
+            <button class="gp-sidebar__nav-item active" data-page="systems">
+                <span class="gp-sidebar__nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="5"/><path d="M6 8v2m6-2v2m6-2v2M2 15h20v2H2zm0 4h20v2H2z"/></svg></span>
+                <span class="gp-sidebar__nav-label">Systems</span>
+            </button>
+        </nav>
+        <div class="gp-sidebar__separator"></div>
+        <div class="gp-sidebar__logout-zone">
+            <button class="gp-sidebar__nav-item logout" onclick="handleLogout()">
+                <span class="gp-sidebar__nav-icon"><img src="assets/logout.png" alt="Logout icon"></span>
+                <span class="gp-sidebar__nav-label">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <main id="main-content">
+
+        <div class="mb-8 animate-in">
+            <p class="section-label mb-1">Hardware & Infrastructure</p>
+            <h1 class="page-title text-3xl font-semibold tracking-tight">
+                Systems Health
+                <span class="text-muted text-lg font-normal ml-2">/ Real-time Monitor</span>
+            </h1>
+        </div>
+
+        <!-- Overview Stats -->
+        <div class="grid grid-cols-4 gap-5 mb-8">
+            <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.05s">
+                <p class="section-label mb-2">System Uptime</p>
+                <div class="stat-val">98.7%</div>
+                <p class="text-xs text-muted mt-2">Last 30 days</p>
+            </div>
+
+            <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.1s">
+                <p class="section-label mb-2">Active Warnings</p>
+                <div class="stat-val" style="color: #FFA500;">2</div>
+                <p class="text-xs text-muted mt-2">Requires attention</p>
+            </div>
+
+            <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.15s">
+                <p class="section-label mb-2">Ports Online</p>
+                <div class="stat-val">12 / 12</div>
+                <p class="text-xs text-muted mt-2">All operational</p>
+            </div>
+
+            <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.2s">
+                <p class="section-label mb-2">Grid Frequency</p>
+                <div class="stat-val">60.02 Hz</div>
+                <p class="text-xs text-muted mt-2">Within tolerance</p>
+            </div>
+        </div>
+
+        <!-- Core Systems -->
+        <p class="section-label mb-4">Core Systems</p>
+        <div class="grid grid-cols-2 gap-6 mb-8">
+            <!-- Grid Sync -->
+            <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.25s">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <p class="section-label mb-1">Grid Sync Status</p>
+                        <h3 class="text-lg font-semibold text-white">60.02 Hz</h3>
+                    </div>
+                    <span class="tag tag-green">SYNCHRONIZED</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Within ±0.05 Hz tolerance — nominal</p>
+                
+                <div class="space-y-3 mb-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-muted">Voltage</span>
+                            <span class="font-mono text-sm font-semibold text-white">240 V</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-muted">THD</span>
+                            <span class="font-mono text-sm font-semibold text-white">1.8%</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-muted">Power Factor</span>
+                            <span class="font-mono text-sm font-semibold text-neon">0.98</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-muted">Phase Angle</span>
+                            <span class="font-mono text-sm font-semibold text-white">120°</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network -->
+            <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.3s">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <p class="section-label mb-1">Network Connectivity</p>
+                        <h3 class="text-lg font-semibold text-white">Online</h3>
+                    </div>
+                    <span class="tag tag-green">OPERATIONAL</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-[#131313] rounded-lg p-3 border border-[#353535]">
+                        <p class="text-xs text-muted mb-1">Uptime (30d)</p>
+                        <div class="text-lg font-semibold text-neon">99.9%</div>
+                    </div>
+                    <div class="bg-[#131313] rounded-lg p-3 border border-[#353535]">
+                        <p class="text-xs text-muted mb-1">Avg Latency</p>
+                        <div class="text-lg font-semibold text-neon">12 ms</div>
+                    </div>
+                    <div class="bg-[#131313] rounded-lg p-3 border border-[#353535]">
+                        <p class="text-xs text-muted mb-1">Backhaul</p>
+                        <div class="text-lg font-semibold text-white">1 Gbps</div>
+                    </div>
+                    <div class="bg-[#131313] rounded-lg p-3 border border-[#353535]">
+                        <p class="text-xs text-muted mb-1">Packet Loss</p>
+                        <div class="text-lg font-semibold text-white">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hardware -->
+        <p class="section-label mb-4">Hardware</p>
+        <div class="grid grid-cols-3 gap-6 mb-8">
+            <!-- Temperatures -->
+            <div class="col-span-2 card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.35s">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <p class="section-label mb-1">Hardware Temperatures</p>
+                        <h3 class="text-lg font-semibold text-white">Temperature Status</h3>
+                    </div>
+                    <span class="tag tag-yellow">1 Warning</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Ambient: 28°C • All readings in °C</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-muted">Main Inverter</span>
+                            <span class="text-sm font-semibold text-neon">45°C • Optimal</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill bg-neon" style="width:36%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-muted">DC/DC Converter A</span>
+                            <span class="text-sm font-semibold text-neon">52°C • Normal</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill bg-neon" style="width:42%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-muted">DC/DC Converter B</span>
+                            <span class="text-sm font-semibold text-yellow-400">71°C • Elevated</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill warn" style="width:57%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-muted">Enclosure Cooling Fan</span>
+                            <span class="text-sm font-semibold text-red-400">84°C • High</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill alert" style="width:67%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
+                    <p class="text-xs font-semibold text-red-400 mb-1">⚠ Recommendation</p>
+                    <p class="text-xs text-muted">Cooling fan temperature trending high. Schedule preventive inspection within 72 hours.</p>
+                </div>
+            </div>
+
+            <!-- Firmware -->
+            <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                     style="animation-delay:0.4s">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <p class="section-label mb-1">Firmware Status</p>
+                        <h3 class="text-lg font-semibold text-white">Modules</h3>
+                    </div>
+                    <span class="tag tag-green">UP TO DATE</span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-center pb-3 border-b border-[#353535]">
+                        <div>
+                            <p class="font-semibold text-white">XGBoost Module</p>
+                            <p class="text-muted">v2.4.1</p>
+                        </div>
+                        <span class="tag tag-green">Current</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-[#353535]">
+                        <div>
+                            <p class="font-semibold text-white">OCPP Controller</p>
+                            <p class="text-muted">v2.0.1</p>
+                        </div>
+                        <span class="tag tag-green">Current</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-[#353535]">
+                        <div>
+                            <p class="font-semibold text-white">Inverter FW</p>
+                            <p class="text-muted">v5.3.0</p>
+                        </div>
+                        <span class="tag tag-green">Current</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold text-white">Payment OS</p>
+                            <p class="text-muted">v3.1.4</p>
+                        </div>
+                        <span class="tag tag-yellow">Update Soon</span>
+                    </div>
+                </div>
+
+                <button class="w-full mt-4 px-4 py-2 rounded-md text-sm font-semibold uppercase tracking-widest border border-[#353535] text-muted hover:text-white hover:bg-[#1b1b1b] transition-all">
+                    Check Updates
+                </button>
+            </div>
+        </div>
+
+        <!-- Event Log -->
+        <p class="section-label mb-4">Event Log</p>
+        <div class="card-glow bg-[#1b1b1b] border border-[#353535] rounded-xl p-6 transition-all duration-300 animate-in"
+                 style="animation-delay:0.45s">
+            <div class="flex items-start justify-between mb-4">
+                <h3 class="text-lg font-semibold text-white">Recent System Events</h3>
+                <span class="text-xs text-muted">Today, <span id="event-date">--</span></span>
+            </div>
+
+            <div class="space-y-4 text-sm">
+                <div class="flex gap-3 pb-4 border-b border-[#353535]">
+                    <div class="w-6 h-6 rounded bg-green-900/30 flex items-center justify-center flex-shrink-0 text-green-400 text-xs">✓</div>
+                    <div>
+                        <p class="text-white">Scheduled self-test completed — all 12 ports passed CAN bus diagnostics</p>
+                        <p class="text-xs text-muted mt-1">08:00 AM</p>
+                    </div>
+                </div>
+                <div class="flex gap-3 pb-4 border-b border-[#353535]">
+                    <div class="w-6 h-6 rounded bg-orange-900/30 flex items-center justify-center flex-shrink-0 text-orange-400 text-xs">!</div>
+                    <div>
+                        <p class="text-white">DC/DC Converter B elevated temperature recorded — fan duty cycle increased to 85%</p>
+                        <p class="text-xs text-muted mt-1">09:43 AM</p>
+                    </div>
+                </div>
+                <div class="flex gap-3 pb-4 border-b border-[#353535]">
+                    <div class="w-6 h-6 rounded bg-green-900/30 flex items-center justify-center flex-shrink-0 text-green-400 text-xs">✓</div>
+                    <div>
+                        <p class="text-white">XGBoost Edge Module — demand forecast model retrained (MAE: 1.4 kW)</p>
+                        <p class="text-xs text-muted mt-1">10:15 AM</p>
+                    </div>
+                </div>
+                <div class="flex gap-3 pb-4 border-b border-[#353535]">
+                    <div class="w-6 h-6 rounded bg-orange-900/30 flex items-center justify-center flex-shrink-0 text-orange-400 text-xs">!</div>
+                    <div>
+                        <p class="text-white">Port 7 network ping anomaly detected — monitoring active, no service impact</p>
+                        <p class="text-xs text-muted mt-1">11:02 AM</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <div class="w-6 h-6 rounded bg-green-900/30 flex items-center justify-center flex-shrink-0 text-green-400 text-xs">✓</div>
+                    <div>
+                        <p class="text-white">Grid frequency fluctuation (59.97 Hz) — auto-corrected, resync in 0.3s</p>
+                        <p class="text-xs text-muted mt-1">11:48 AM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-clock').textContent =
+                now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Update event date
+        const now = new Date();
+        document.getElementById('event-date').textContent =
+            now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    </script>
+    </div>
+
+    <script src="components/sidebar.js"></script>
+    <script src="components/top-nav-enhancements.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ML Dashboard Test</title>
+</head>
+<body>
+    <h1>ML Prediction Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testMLPrediction() {
+            try {
+                const response = await fetch('http://10.201.34.114:8000/api/grid-prediction');
+                const data = await response.json();
+                
+                document.getElementById('results').innerHTML = `
+                    <h2>✅ ML Prediction Working!</h2>
+                    <p><strong>Current Load:</strong> ${data.current_load_kw} kW</p>
+                    <p><strong>Predicted Load:</strong> ${data.predicted_load_kw} kW</p>
+                    <p><strong>Active Sessions:</strong> ${data.active_sessions}</p>
+                    <p><strong>Model Used:</strong> ${data.model_used}</p>
+                    <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                `;
+                console.log('✅ ML Prediction data:', data);
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <h2>❌ Error</h2>
+                    <p>${error.message}</p>
+                `;
+                console.error('❌ Error:', error);
+            }
+        }
+        
+        testMLPrediction();
+    </script>
+</body>
+</html>

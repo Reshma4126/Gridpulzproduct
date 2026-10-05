@@ -1,0 +1,296 @@
+/* ==============================
+   GridPulz — Shared Styles
+   ============================== */
+
+/* Base body */
+body {
+    background-color: #131313;
+    color: #ffffff;
+    min-height: max(884px, 100dvh);
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+body, body * {
+    font-family: 'Michroma', sans-serif !important;
+}
+
+/* Material Symbols icon defaults */
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Hide scrollbar (used in alerts filters) */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* HUD grid layout (analytics heatmap) */
+.hud-grid {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 4px;
+}
+
+/* HUD scanline overlay (monitor page) */
+.hud-scanline {
+    background: linear-gradient(to bottom, transparent 50%, rgba(204, 255, 0, 0.02) 50%);
+    background-size: 100% 4px;
+}
+
+/* Pulse glow animation (system health) */
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(204, 255, 0, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(204, 255, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(204, 255, 0, 0);
+    }
+}
+
+.status-pulse {
+    animation: pulse-glow 2s infinite;
+}
+
+/* ==============================
+   Command Center Dashboard
+   ============================== */
+
+.cc-dashboard-page {
+    margin: 0;
+    min-height: 100vh;
+    background: #f5f6f8;
+    color: #111827;
+    font-family: Michroma, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.cc-shell {
+    min-height: 100vh;
+}
+
+.cc-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background: #111827;
+    color: #d1d5db;
+    border-right: 1px solid #1f2937;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px 18px;
+    overflow-y: auto;
+}
+
+.cc-brand {
+    color: #f9fafb;
+    font-size: 1.06rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 22px;
+}
+
+.cc-station-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 24px;
+}
+
+.cc-station-label {
+    color: #d0d0d0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.7rem;
+    margin-bottom: 8px;
+}
+
+.cc-station-name {
+    color: #f9fafb;
+    font-size: 1.02rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    overflow-wrap: anywhere;
+}
+
+.cc-station-meta {
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.cc-nav {
+    display: grid;
+    gap: 8px;
+}
+
+.cc-nav-link {
+    color: #e0e0e0;
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.cc-nav-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.cc-nav-link-active {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.cc-logout-btn {
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    text-align: center;
+    border-radius: 10px;
+    border: 1px solid #374151;
+    color: #ffffff;
+    padding: 11px 12px;
+    background: #0f172a;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.cc-logout-btn:hover {
+    background: #1f2937;
+    border-color: #4b5563;
+}
+
+.cc-main {
+    margin-left: 280px;
+    min-height: 100vh;
+    padding: 24px;
+    background: #f5f6f8;
+    overflow-y: auto;
+}
+
+.cc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.cc-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.cc-alert-banner {
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 14px 30px rgba(220, 38, 38, 0.24);
+}
+
+.cc-alert-btn {
+    border: none;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #b91c1c;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.cc-alert-btn:hover {
+    background: #f3f4f6;
+}
+
+.cc-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.cc-metric-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    min-height: 144px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.cc-metric-title {
+    color: #6b7280;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.cc-metric-value {
+    color: #111827;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.cc-metric-sub {
+    color: #9ca3af;
+    font-size: 0.82rem;
+}
+
+.cc-chart-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    padding: 18px;
+}
+
+.cc-chart-title {
+    color: #374151;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 1024px) {
+    .cc-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .cc-sidebar {
+        position: static;
+        width: 100%;
+        border-right: none;
+    }
+
+    .cc-main {
+        margin-left: 0;
+    }
+}
+

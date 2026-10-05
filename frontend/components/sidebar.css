@@ -1,0 +1,494 @@
+/* ================================================
+   GridPulz Collapsible Sidebar Navigation
+   Dark Theme with Neon Green Accent
+   ================================================ */
+
+:root {
+  --gp-accent: #CCFF00;
+  --gp-accent-dim: rgba(204, 255, 0, 0.08);
+  --gp-accent-glow: rgba(204, 255, 0, 0.25);
+  --gp-bg: #0A0A0F;
+  --gp-surface: #131313;
+  --gp-surface-alt: #1A1A1A;
+  --gp-border: #2a2a2a;
+  --gp-text: #FFFFFF;
+  --gp-text-muted: #f5f5f5;
+  --gp-text-dim: #d5d5d5;
+  --gp-alert: #FF6666;
+}
+
+/* ========== SIDEBAR CONTAINER ========== */
+.gp-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 68px;
+  background: var(--gp-surface);
+  border-right: 1px solid var(--gp-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+/* Scanline overlay effect */
+.gp-sidebar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 2px,
+    rgba(204, 255, 0, 0.012) 2px,
+    rgba(204, 255, 0, 0.012) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gp-sidebar > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Expanded state */
+.gp-sidebar.expanded {
+  width: 240px;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Desktop + Tablet: collapsed 68px, expand via JS .expanded class (hover) */
+/* The JS attaches mouseenter/mouseleave and adds .expanded — CSS just defines states */
+@media (min-width: 769px) {
+  .gp-sidebar.expanded {
+    width: 240px;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Mobile: tap toggle (no hover needed) */
+@media (max-width: 768px) {
+  .gp-sidebar {
+    width: 68px;
+  }
+  .gp-sidebar.expanded {
+    width: 240px;
+  }
+}
+
+/* ========== LOGO SECTION ========== */
+.gp-sidebar__logo-zone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  justify-content: center;
+  border-bottom: 1px solid var(--gp-border);
+  flex-shrink: 0;
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1), justify-content 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 50px;
+}
+
+.gp-sidebar.expanded .gp-sidebar__logo-zone {
+  padding: 16px 14px;
+  justify-content: flex-start;
+}
+
+.gp-sidebar__logo-mark {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(204, 255, 0, 0.3);
+  border-radius: 3px;
+  background: rgba(204, 255, 0, 0.12);
+  flex-shrink: 0;
+  transition: all 0.12s;
+  box-shadow: 0 0 14px rgba(204, 255, 0, 0.2);
+}
+
+.gp-sidebar__logo-mark svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--gp-accent);
+}
+
+.gp-sidebar__logo-mark:hover {
+  background: rgba(204, 255, 0, 0.12);
+  border-color: rgba(204, 255, 0, 0.5);
+}
+
+.gp-sidebar__brand {
+  font-family: 'Michroma', monospace;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: #d5ff4d;
+  text-shadow: 0 0 10px rgba(204, 255, 0, 0.34);
+  white-space: nowrap;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.18s 0.06s;
+}
+
+.gp-sidebar.expanded .gp-sidebar__brand {
+  opacity: 1;
+}
+
+/* Brand shows when expanded (controlled by .expanded class, set by JS hover) */
+
+/* ========== NAVIGATION ========== */
+.gp-sidebar__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px;
+  gap: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.gp-sidebar__nav::-webkit-scrollbar {
+  display: none;
+}
+
+/* Section label */
+.gp-sidebar__sec-label {
+  font-family: 'Michroma', monospace;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: #d0d0d0;
+  text-transform: uppercase;
+  padding: 10px 6px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  display: block;
+  transition: max-height 0.2s ease, opacity 0.15s ease;
+}
+
+.gp-sidebar.expanded .gp-sidebar__sec-label {
+  max-height: 28px;
+  opacity: 1;
+}
+
+/* Section labels show when expanded (controlled by .expanded class) */
+
+/* Nav item button */
+.gp-sidebar__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+  padding: 10px 0;
+  cursor: pointer;
+  border-radius: 3px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  transition: background 0.12s ease, gap 0.25s ease 0.05s, padding 0.25s ease;
+  position: relative;
+  justify-content: center;
+  flex-shrink: 0;
+  text-align: left;
+  font-family: 'Michroma', monospace;
+  color: var(--gp-text-muted);
+  height: 36px;
+}
+
+.gp-sidebar.expanded .gp-sidebar__nav-item {
+  padding: 10px 12px;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.gp-sidebar__nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gp-sidebar__nav-item:hover .gp-sidebar__nav-icon svg {
+  stroke: #aaa;
+}
+
+.gp-sidebar__nav-item:hover .gp-sidebar__nav-icon img {
+  filter: brightness(0) saturate(100%) invert(82%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(96%) contrast(92%);
+}
+
+/* Active state */
+.gp-sidebar__nav-item.active {
+  background: var(--gp-accent-dim);
+}
+
+.gp-sidebar__nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 32px;
+  background: var(--gp-accent);
+  box-shadow: 0 0 8px var(--gp-accent-glow);
+  border-radius: 0 2px 2px 0;
+}
+
+.gp-sidebar__nav-item.active .gp-sidebar__nav-icon svg {
+  stroke: var(--gp-accent);
+  filter: drop-shadow(0 0 5px var(--gp-accent-glow));
+}
+
+.gp-sidebar__nav-item.active .gp-sidebar__nav-icon img {
+  filter: brightness(0) saturate(100%) invert(90%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(102%) contrast(102%);
+}
+
+.gp-sidebar__nav-item.active .gp-sidebar__nav-label {
+  color: var(--gp-text);
+}
+
+/* Icon */
+.gp-sidebar__nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gp-sidebar__nav-icon svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: var(--gp-text-muted);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.12s ease, filter 0.12s ease;
+}
+
+.gp-sidebar__nav-icon img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(72%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(92%) contrast(90%);
+  transition: filter 0.12s ease;
+}
+
+/* Direct img children in nav items (for alt sidebar structure) */
+a.gp-sidebar__nav-item > img,
+button.gp-sidebar__nav-item > img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(72%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(92%) contrast(90%);
+  transition: filter 0.12s ease;
+}
+
+a.gp-sidebar__nav-item:hover > img,
+button.gp-sidebar__nav-item:hover > img {
+  filter: brightness(0) saturate(100%) invert(82%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(96%) contrast(92%);
+}
+
+a.gp-sidebar__nav-item.active > img,
+button.gp-sidebar__nav-item.active > img {
+  filter: brightness(0) saturate(100%) invert(90%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(102%) contrast(102%);
+}
+
+/* Label */
+.gp-sidebar__nav-label {
+  font-family: 'Michroma', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--gp-text-muted);
+  white-space: nowrap;
+  text-transform: uppercase;
+  opacity: 0;
+  width: 0;
+  transition: opacity 0.15s 0.04s ease, width 0.25s ease;
+  overflow: hidden;
+}
+
+.gp-sidebar.expanded .gp-sidebar__nav-label {
+  opacity: 1;
+  width: auto;
+}
+
+/* Nav labels show when expanded (controlled by .expanded class) */
+
+/* Badge (unread indicator) */
+.gp-sidebar__badge {
+  width: 8px;
+  height: 8px;
+  background: var(--gp-alert);
+  border-radius: 50%;
+  border: 2px solid var(--gp-surface);
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.7);
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  flex-shrink: 0;
+}
+
+.gp-sidebar.expanded .gp-sidebar__badge {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ========== SEPARATOR ========== */
+.gp-sidebar__separator {
+  border: none;
+  border-top: 1px solid var(--gp-border);
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+/* ========== LOGOUT ZONE ========== */
+.gp-sidebar__logout-zone {
+  padding: 8px 8px 14px;
+  flex-shrink: 0;
+}
+
+.gp-sidebar__nav-item.logout .gp-sidebar__nav-icon svg {
+  stroke: #b0b0b0;
+}
+
+.gp-sidebar__nav-item.logout .gp-sidebar__nav-icon img {
+  filter: brightness(0) saturate(100%) invert(75%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(92%) contrast(90%);
+}
+
+.gp-sidebar__nav-item.logout .gp-sidebar__nav-label {
+  color: #d0d0d0;
+  opacity: 1;
+}
+
+.gp-sidebar__nav-item.logout:hover {
+  background: rgba(255, 68, 68, 0.08);
+}
+
+.gp-sidebar__nav-item.logout:hover .gp-sidebar__nav-icon svg {
+  stroke: var(--gp-alert);
+}
+
+.gp-sidebar__nav-item.logout:hover .gp-sidebar__nav-icon img {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(100%) saturate(1000%) hue-rotate(346deg) brightness(104%) contrast(104%);
+}
+
+.gp-sidebar__nav-item.logout:hover .gp-sidebar__nav-label {
+  color: var(--gp-alert);
+}
+
+/* Logout button specific styles (alt structure) */
+.gp-sidebar__logout {
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--gp-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.12s ease;
+  font-family: 'Michroma', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.gp-sidebar__logout img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(58%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(88%) contrast(88%);
+  transition: filter 0.12s ease;
+}
+
+.gp-sidebar__logout svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke: var(--gp-text-dim);
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.12s ease;
+}
+
+.gp-sidebar__logout:hover {
+  background: rgba(255, 68, 68, 0.08);
+}
+
+.gp-sidebar__logout:hover img {
+  filter: brightness(0) saturate(100%) invert(40%) sepia(100%) saturate(1000%) hue-rotate(346deg) brightness(104%) contrast(104%);
+}
+
+.gp-sidebar__logout:hover svg {
+  stroke: var(--gp-alert);
+}
+
+/* ========== CONTENT LAYOUT — OVERLAY MODEL ========== */
+/* Sidebar overlays content — margin-left NEVER changes on expand */
+#main-content {
+  margin-left: 68px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.responsive-content {
+  margin-left: 68px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ========== RESPONSIVE ========== */
+/* Mobile: sidebar overlays with backdrop */
+@media (max-width: 768px) {
+  .gp-sidebar {
+    width: 68px;
+    z-index: 1000;
+  }
+
+  .gp-sidebar.expanded {
+    width: 220px;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.6);
+  }
+
+  #main-content,
+  #page-content,
+  .responsive-content {
+    margin-left: 0 !important;
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
+  }
+
+  /* Mobile backdrop overlay */
+  .gp-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    display: none;
+  }
+
+  body.sidebar-open .gp-sidebar-backdrop {
+    display: block;
+  }
+}

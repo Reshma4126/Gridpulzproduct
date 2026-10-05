@@ -1,0 +1,296 @@
+<!-- ============================================
+     GridPulz Sidebar Navigation Component
+     Reusable HTML snippet for any dashboard page
+     ============================================ -->
+
+<!-- VARIANT A: User Dashboard Sidebar -->
+<!-- 
+  Usage: Copy this entire <aside> block into your user dashboard pages
+  Make sure to link sidebar.css in your <head>
+-->
+<aside class="gp-sidebar" id="main-sidebar">
+    <!-- Logo zone -->
+    <div class="gp-sidebar__logo-zone">
+        <div class="gp-sidebar__logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z"/>
+            </svg>
+        </div>
+        <div class="gp-sidebar__brand">GridPulz</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="gp-sidebar__nav">
+        <!-- Main Section -->
+        <span class="gp-sidebar__sec-label">Main</span>
+        
+        <button class="gp-sidebar__nav-item active" data-page="dashboard">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/dashboard.png" alt="Dashboard icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Dashboard</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="charge-now">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/chargenow.png" alt="Charge Now icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Charge Now</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="prebook">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/prebook.png" alt="Prebook icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Prebook</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="station-map">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/map.png" alt="Station Map icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Station Map</span>
+        </button>
+
+        <!-- Config Section -->
+        <span class="gp-sidebar__sec-label">Config</span>
+
+        <button class="gp-sidebar__nav-item" data-page="my-bookings">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/mybookings.png" alt="My Bookings icon">
+            </span>
+            <span class="gp-sidebar__nav-label">My Bookings</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="settings">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/settings.png" alt="Settings icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Settings</span>
+        </button>
+    </nav>
+
+    <!-- Separator -->
+    <div class="gp-sidebar__separator"></div>
+
+    <!-- Logout -->
+    <div class="gp-sidebar__logout-zone">
+        <button class="gp-sidebar__nav-item logout" onclick="handleLogout()">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/logout.png" alt="Logout icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Logout</span>
+        </button>
+    </div>
+</aside>
+
+<!-- ============================================
+     VARIANT B: Operator Dashboard Sidebar
+     
+     Use this for operator/station control pages
+     ============================================ -->
+<aside class="gp-sidebar" id="main-sidebar">
+    <!-- Logo zone -->
+    <div class="gp-sidebar__logo-zone">
+        <div class="gp-sidebar__logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M13 2L4 14h7l-1 8 9-10h-7l1-10z"/>
+            </svg>
+        </div>
+        <div class="gp-sidebar__brand">GridPulz</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="gp-sidebar__nav">
+        <!-- Control Section -->
+        <span class="gp-sidebar__sec-label">Control</span>
+        
+        <button class="gp-sidebar__nav-item active" data-page="dashboard">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/dashboard.png" alt="Dashboard icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Dashboard</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="operator">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/operator.png" alt="Operator icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Operator</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="scheduler">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/scheduler.png" alt="Scheduler icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Scheduler</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="alerts">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/alerts.png" alt="Alerts icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Alerts</span>
+            <span class="gp-sidebar__badge" id="alerts-badge" style="display:none;"></span>
+        </button>
+
+        <!-- Infrastructure Section -->
+        <span class="gp-sidebar__sec-label">Infrastructure</span>
+
+        <button class="gp-sidebar__nav-item" data-page="grid-management">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/network.png" alt="Grid Management icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Grid Management</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="systems">
+            <span class="gp-sidebar__nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="2" y="3" width="20" height="5"/>
+                    <path d="M6 8v2m6-2v2m6-2v2M2 15h20v2H2zm0 4h20v2H2z"/>
+                </svg>
+            </span>
+            <span class="gp-sidebar__nav-label">Systems</span>
+        </button>
+
+        <button class="gp-sidebar__nav-item" data-page="analytics">
+            <span class="gp-sidebar__nav-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3"/>
+                    <polyline points="12 12 20 7.5M12 12 4 7.5M12 12 12 21"/>
+                </svg>
+            </span>
+            <span class="gp-sidebar__nav-label">Analytics</span>
+        </button>
+    </nav>
+
+    <!-- Separator -->
+    <div class="gp-sidebar__separator"></div>
+
+    <!-- Logout -->
+    <div class="gp-sidebar__logout-zone">
+        <button class="gp-sidebar__nav-item logout" onclick="handleLogout()">
+            <span class="gp-sidebar__nav-icon">
+                <img src="assets/logout.png" alt="Logout icon">
+            </span>
+            <span class="gp-sidebar__nav-label">Logout</span>
+        </button>
+    </div>
+</aside>
+
+<!-- ============================================
+     JAVASCRIPT IMPLEMENTATION
+     Add this to your page's <script> section
+     ============================================ -->
+<script>
+// Initialize sidebar interactions
+function initGridPulzSidebar() {
+    const sidebar = document.getElementById('main-sidebar');
+    
+    if (!sidebar) return;
+
+    // Desktop: Hover to expand
+    sidebar.addEventListener('mouseenter', () => {
+        sidebar.classList.add('expanded');
+    });
+
+    sidebar.addEventListener('mouseleave', () => {
+        sidebar.classList.remove('expanded');
+    });
+
+    // Mobile: Tap to toggle (tap on sidebar background)
+    sidebar.addEventListener('click', (e) => {
+        if (e.target === sidebar || e.target.closest('.gp-sidebar__nav') === sidebar.querySelector('.gp-sidebar__nav')) {
+            sidebar.classList.toggle('expanded');
+        }
+    });
+
+    // Nav item click handlers
+    const navItems = sidebar.querySelectorAll('.gp-sidebar__nav-item:not(.logout)');
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Update active state
+            navItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+
+            // Navigate to page
+            const page = item.dataset.page;
+            if (page) {
+                window.location.href = `${page}.html`;
+            }
+        });
+    });
+
+    // Logout handler
+    const logoutBtn = sidebar.querySelector('.gp-sidebar__nav-item.logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
+}
+
+// Logout function (implement your logic here)
+function handleLogout() {
+    console.log('Logout triggered');
+    // Example: window.location.href = 'login.html';
+    // Or call your logout API
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initGridPulzSidebar);
+
+// Utility: Show alert badge
+function showAlertBadge(count = 1) {
+    const badge = document.getElementById('alerts-badge');
+    if (badge) {
+        badge.style.display = count > 0 ? 'block' : 'none';
+    }
+}
+
+// Utility: Set active navigation item
+function setActiveSidebarItem(pageName) {
+    const sidebar = document.getElementById('main-sidebar');
+    const items = sidebar.querySelectorAll('.gp-sidebar__nav-item:not(.logout)');
+    items.forEach(item => {
+        if (item.dataset.page === pageName) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+// Example: Show badge on alerts page if there are unread alerts
+// Call this in your alerts.html page:
+// showAlertBadge(unreadAlertsCount);
+</script>
+
+<!-- ============================================
+     INTEGRATION CHECKLIST
+     ============================================ -->
+<!-- 
+1. Link the CSS in your <head>:
+   <link rel="stylesheet" href="components/sidebar.css">
+
+2. Replace your existing sidebar with the HTML above
+
+3. Add the JavaScript either:
+   - Inline in your page <script> block
+   - Or create a sidebar.js file and link it
+
+4. Adjust data-page attributes to match your actual page URLs
+
+5. Customize active item on page load:
+   document.addEventListener('DOMContentLoaded', () => {
+       setActiveSidebarItem('dashboard'); // or whatever page you're on
+   });
+
+6. For alerts badge, call:
+   showAlertBadge(3); // shows badge if unread count > 0
+
+7. Update handleLogout() to your actual logout logic
+
+8. Test on mobile/tablet to verify tap-to-toggle works
+-->
