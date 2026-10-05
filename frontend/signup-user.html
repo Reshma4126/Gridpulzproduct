@@ -5,7 +5,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>GRIDPULZ | EV Driver Registration</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Michroma&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script>
         tailwind.config = {
@@ -29,9 +29,9 @@
                         "primary-container": "#b8f600",
                     },
                     fontFamily: {
-                        "headline": ["Michroma", "sans-serif"],
-                        "body": ["Michroma", "sans-serif"],
-                        "mono": ["Michroma", "monospace"]
+                        "headline": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
                     }
                 }
             }
@@ -73,7 +73,7 @@
         }
     </style>
 </head>
-<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen py-12 flex items-center justify-center relative min-w-[1440px] overflow-x-auto">
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen py-12 flex items-center justify-center relative overflow-x-hidden">
     <div class="dot-grid absolute inset-0 opacity-40 z-0 pointer-events-none"></div>
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-[#BFFF00] opacity-[0.02] blur-[150px] rounded-full pointer-events-none z-0"></div>
 
@@ -87,7 +87,7 @@
         <p class="text-center font-body text-xs text-on-surface-variant mb-10">Connect to the intelligent grid. Create your EV driver profile.</p>
 
         <form id="signup-user-form" onsubmit="handleUserSignup(event)">
-            <div class="grid grid-cols-2 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <!-- Left Column: Identity -->
                 <div class="space-y-4">
                     <div>
@@ -156,9 +156,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
-    <script src="js/api-config.js"></script>
     <script src="js/auth.js"></script>
 </body>
 </html>
-
-

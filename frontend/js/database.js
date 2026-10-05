@@ -49,9 +49,6 @@ window.insertLiveData = async function(userId, batterySoc, latitude, longitude) 
  * Fetches all stations and filters them by radius, sorted by proximity.
  */
 window.getNearbyStations = async function(lat, lng, radiusKm = 30) {
-    console.log('getNearbyStations called with:', lat, lng, radiusKm);
-    console.log('Supabase client available:', !!window.supabaseClient);
-    
     if (!window.supabaseClient) {
         throw new Error("Supabase client not initialized.");
     }
@@ -60,16 +57,9 @@ window.getNearbyStations = async function(lat, lng, radiusKm = 30) {
         .from('stations')
         .select('*');
 
-    console.log('Stations query result:', { stations, error });
-
     if (error) throw error;
 
-    if (!stations) {
-        console.log('No stations returned from database');
-        return [];
-    }
-
-    console.log('Processing', stations.length, 'stations');
+    if (!stations) return [];
 
     const nearby = stations.map(station => {
         const dist = window.haversineKm(lat, lng, station.lat ?? station.latitude, station.lng ?? station.longitude);
@@ -78,7 +68,6 @@ window.getNearbyStations = async function(lat, lng, radiusKm = 30) {
     .filter(station => station.dist !== null && station.dist <= radiusKm)
     .sort((a, b) => a.dist - b.dist);
 
-    console.log('Nearby stations after filtering:', nearby.length);
     return nearby;
 };
 

@@ -9,217 +9,96 @@
 //   5. Prebook Slots API & Logic
 // ============================================================
 
-// Backend URL configured in api-config.js
+const API_BASE_URL = "http://localhost:8000/api";
 
 // ─── DOM Helpers ────────────────────────────────────────────
 function el(id) { return document.getElementById(id); }
 
 // ─── State ──────────────────────────────────────────────────
-let currentLat = 11.0589; // Default to Coimbatore
-let currentLng = 77.0912;
+let currentLat = null;
+let currentLng = null;
 let userProfile = null;
 let currentSession = null;
 let upcomingBookings = JSON.parse(localStorage.getItem('gridpulz_upcoming') || '[]');
-const SLOT_ACTIVE_WINDOW_MINS = 45;
-const QUEUE_SYNC_CHANNEL = 'gridpulz-queue-sync';
-let queueSyncChannelRef = null;
-
-function initQueueSyncChannel() {
-    if (queueSyncChannelRef || !window.supabaseClient) return queueSyncChannelRef;
-    try {
-        queueSyncChannelRef = window.supabaseClient.channel(QUEUE_SYNC_CHANNEL, {
-            config: { broadcast: { self: false } }
-        });
-        
-        // Listen for remote events (other clients/devices)
-        queueSyncChannelRef.on('broadcast', { event: 'queue_event' }, ({ payload }) => {
-            console.log('📡 Remote queue event received:', payload);
-            if (payload && payload.action) {
-                applyQueueSyncEvent(payload.action, payload.payload);
-            }
-        });
-
-        queueSyncChannelRef.subscribe();
-    } catch (error) {
-        console.warn('Queue sync channel init failed:', error);
-    }
-    return queueSyncChannelRef;
-}
-
-function applyQueueSyncEvent(action, payload) {
-    try {
-        let q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
-        if (action === 'upsert') {
-            const idx = q.findIndex(item => String(item.id) === String(payload.id));
-            if (idx >= 0) q[idx] = { ...q[idx], ...payload };
-            else q.push(payload);
-        } else if (action === 'remove') {
-            q = q.filter(item => String(item.id) !== String(payload.id));
-        } else if (action === 'replace' && Array.isArray(payload.queue)) {
-            q = payload.queue;
-        }
-        localStorage.setItem('gridpulz_queue', JSON.stringify(q));
-        
-        // Trigger UI updates if relevant (e.g. if we are on a page that shows queue status)
-        if (typeof renderActiveBookings === 'function') renderActiveBookings();
-    } catch (e) {}
-}
-
-function initQueueSyncListeners() {
-    // Local tab listener
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'gridpulz_queue_sync_ping' && e.newValue) {
-            try {
-                const data = JSON.parse(e.newValue);
-                applyQueueSyncEvent(data.action, data.payload);
-            } catch (err) {}
-        }
-        // Also listen for upcoming bookings sync
-        if (e.key === 'gridpulz_upcoming') {
-            upcomingBookings = JSON.parse(e.newValue || '[]');
-            renderUpcomingBookings();
-        }
-    });
-}
-
-function emitQueueSync(action, payload = {}) {
-    // Local fallback for same-browser tabs/windows.
-    try {
-        localStorage.setItem('gridpulz_queue_sync_ping', JSON.stringify({ action, payload, ts: Date.now() }));
-    } catch (e) {}
-
-    // Cross-client broadcast via Supabase Realtime.
-    const ch = initQueueSyncChannel();
-    if (!ch) return;
-    ch.send({
-        type: 'broadcast',
-        event: 'queue_event',
-        payload: { action, payload, ts: Date.now() }
-    }).catch(() => {});
-}
 
 function saveUpcoming() {
     localStorage.setItem('gridpulz_upcoming', JSON.stringify(upcomingBookings));
 }
 let liveMap = null;
 let mapMarkers = [];
-let directionsService = null;
-let directionsRenderer = null;
 
 // =============================================================
 // API TIER
 // =============================================================
 
-function getStationIndexFromName(name = '') {
-    if (name.includes('Beta')) return 1;
-    if (name.includes('Gamma')) return 2;
-    return 0;
-}
-
-function upsertQueueEntry(entry) {
-    try {
-        const q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
-        const idx = q.findIndex(item => String(item.id) === String(entry.id));
-        if (idx >= 0) q[idx] = { ...q[idx], ...entry };
-        else q.push(entry);
-        localStorage.setItem('gridpulz_queue', JSON.stringify(q));
-        emitQueueSync('upsert', entry);
-    } catch (e) {}
-}
-
-function removeQueueEntryById(id) {
+function simulateQueuePush(soc, station, overrideId = null) {
+    if (!station || !station.name) return;
     try {
         let q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
-        q = q.filter(item => String(item.id) !== String(id));
-        localStorage.setItem('gridpulz_queue', JSON.stringify(q));
-        emitQueueSync('remove', { id });
-    } catch (e) {}
-}
-
-function cleanupExpiredQueueEntries(nowMs = Date.now()) {
-    try {
-        let changed = false;
-        let q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
-        const filtered = q.filter(item => {
-            if (item.booked_time) {
-                const endMs = new Date(item.booked_time).getTime() + SLOT_ACTIVE_WINDOW_MINS * 60000;
-                if (Number.isFinite(endMs) && nowMs > endMs) {
-                    changed = true;
-                    return false;
-                }
-            }
-            if (!item.booked_time && item.timestamp) {
-                const endMs = Number(item.timestamp) + SLOT_ACTIVE_WINDOW_MINS * 60000;
-                if (Number.isFinite(endMs) && nowMs > endMs) {
-                    changed = true;
-                    return false;
-                }
-            }
-            return true;
+        let sIdx = 0;
+        if (station.name.includes('Beta')) sIdx = 1;
+        if (station.name.includes('Gamma')) sIdx = 2;
+        
+        const vName = userProfile && userProfile.vehicle_name !== 'Not set' ? userProfile.vehicle_name : ('Driver-' + Math.floor(Math.random()*1000));
+        q.push({
+            id: overrideId || (Date.now() + Math.random()),
+            name: vName,
+            user_id: window.currentSession?.user?.id || 'demo',
+            battery: soc,
+            stationIdx: sIdx,
+            waitMins: 0,
+            timestamp: Date.now(),
+            isExternal: true
         });
-        if (changed) {
-            localStorage.setItem('gridpulz_queue', JSON.stringify(filtered));
-            emitQueueSync('replace', { queue: filtered });
-        }
-    } catch (e) {}
-}
-
-function simulateQueuePush(soc, station, overrideId = null, options = {}) {
-    if (!station || !station.name) {
-        console.error('❌ simulateQueuePush failed: Invalid station', station);
-        return;
-    }
-    const vName = userProfile && userProfile.vehicle_name !== 'Not set' ? userProfile.vehicle_name : ('Driver-' + Math.floor(Math.random()*1000));
-    const stationIdx = getStationIndexFromName(station.name);
-    const queueEntry = {
-        id: overrideId || (Date.now() + Math.random()),
-        name: vName,
-        user_id: currentSession?.user?.id || 'demo',
-        battery: soc,
-        stationIdx: stationIdx,
-        station_id: station.id || null,
-        station_name: station.name,
-        waitMins: 0,
-        timestamp: Date.now(),
-        isExternal: true,
-        ...options
-    };
-    console.log('✓ Adding to queue:', queueEntry);
-    upsertQueueEntry(queueEntry);
+        localStorage.setItem('gridpulz_queue', JSON.stringify(q));
+    } catch(e) {}
 }
 
 // =============================================================
 // MODULE: Grid Safeguard — Station Risk Assessment & Rerouting
 // =============================================================
 
+/**
+ * Assess a station's risk level based on grid_load.
+ * Simulates what an ML model would return.
+ */
 function assessStationRisk(station) {
+    // grid_load comes from Supabase station record; fall back to random simulation
     const load = station.grid_load ?? station.gridLoad ?? Math.floor(Math.random() * 100);
     if (load > 75) return { risk: 'HIGH', load, color: '#ef4444' };
     if (load > 50) return { risk: 'MODERATE', load, color: '#f59e0b' };
     return { risk: 'LOW', load, color: '#10b981' };
 }
 
+/**
+ * Find the best alternative station (closest + LOW risk).
+ * Mirrors the FastAPI `find_best_alternative` logic.
+ */
 function findBestAlternative(stations, excludeStation) {
+    // 1. Filter out the overloaded station
     const candidates = stations.filter(s => s.name !== excludeStation.name);
+    // 2. Filter for LOW or MODERATE risk only
     const stable = candidates.filter(s => assessStationRisk(s).risk !== 'HIGH');
+    // 3. Sort by distance (already have dist calculated via Haversine)
     stable.sort((a, b) => (a.dist || 999) - (b.dist || 999));
+    // 4. Return the closest stable station, or first candidate as last resort
     return stable[0] || candidates[0] || null;
 }
 
 async function apiChargeNow(soc) {
+    // 1. Get all nearby stations
     let allStations = [];
-    let bestStation = null;
+    let bestStation = { name: 'Fallback Station Alpha', dist: '--' };
 
     if (currentLat && currentLng && window.getNearbyStations) {
         try {
-            allStations = await window.getNearbyStations(currentLat, currentLng, 1000);
+            allStations = await window.getNearbyStations(currentLat, currentLng, 30);
             
-            if (window.selectedChargeNowStation) {
-                bestStation = window.selectedChargeNowStation;
-            } else if (allStations.length > 0 && window.rankStationsBySoC) {
+            // 2. Use SoC-weighted scoring if available, else fall back to closest
+            if (allStations.length > 0 && window.rankStationsBySoC) {
                 const ranked = window.rankStationsBySoC(allStations, soc);
                 bestStation = ranked[0];
-                allStations = ranked;
+                allStations = ranked; // Keep sorted order
             } else if (allStations.length > 0) {
                 bestStation = allStations[0];
             }
@@ -228,19 +107,18 @@ async function apiChargeNow(soc) {
         }
     }
 
-    if (!bestStation) {
-        throw new Error("No nearby charging stations found. Please try moving to a different area.");
-    }
-
     return new Promise(resolve => {
         setTimeout(() => {
+            // 3. Assess the best station's risk
             const risk = assessStationRisk(bestStation);
 
+            // 4. Grid Safeguard Trigger: If HIGH risk, reroute
             if (risk.risk === 'HIGH') {
                 const alternative = findBestAlternative(allStations, bestStation);
                 if (alternative) {
                     const altRisk = assessStationRisk(alternative);
                     simulateQueuePush(soc, alternative);
+                    // Track assigned station for realtime redirect monitoring
                     if (window.setAssignedStation) window.setAssignedStation(alternative.id);
                     resolve({
                         status: 'rerouted',
@@ -248,42 +126,53 @@ async function apiChargeNow(soc) {
                         original_risk: risk,
                         station: alternative,
                         station_risk: altRisk,
-                        reason: `${bestStation.name} is at ${risk.load}% grid load. Optimized for safety.`,
+                        reason: `${bestStation.name} is at ${risk.load}% grid load (Peak Load). Grid Safeguard has optimized your route.`,
                         slot_time: 'Immediate'
                     });
                 } else {
                     simulateQueuePush(soc, bestStation);
-                    resolve({ status: 'confirmed', station: bestStation, station_risk: risk, slot_time: 'Immediate' });
+                    if (window.setAssignedStation) window.setAssignedStation(bestStation.id);
+                    resolve({
+                        status: 'confirmed',
+                        station: bestStation,
+                        station_risk: risk,
+                        slot_time: 'Immediate',
+                        warning: 'All stations are under high load.'
+                    });
                 }
             } else {
+                // 5. Station is safe — confirm normally
                 simulateQueuePush(soc, bestStation);
                 if (window.setAssignedStation) window.setAssignedStation(bestStation.id);
-                resolve({ status: 'confirmed', station: bestStation, station_risk: risk, slot_time: 'Immediate' });
+                resolve({
+                    status: 'confirmed',
+                    station: bestStation,
+                    station_risk: risk,
+                    slot_time: 'Immediate'
+                });
             }
         }, 1200);
     });
 }
 
-async function apiPrebook(soc, date, time, stationId = null) {
-    let selectedStation = null;
-    
-    if (stationId && window._stationsCacheData) {
-        selectedStation = window._stationsCacheData.find(s => String(s.id) === String(stationId));
-    }
-
-    if (!selectedStation) {
-        throw new Error("Please select a valid station first.");
+async function apiPrebook(soc, date, time) {
+    let targetStation = { name: 'Fallback Station Alpha' };
+    if (currentLat && currentLng && window.getNearbyStations) {
+        try {
+            const nearby = await window.getNearbyStations(currentLat, currentLng, 30);
+            if (nearby.length > 0) targetStation = nearby[0];
+        } catch (e) {}
     }
 
     return new Promise(resolve => {
         setTimeout(() => {
             const bookingId = "BK-" + Math.floor(Math.random() * 90000 + 10000);
-            const scheduledTime = `${date}T${time}:00`;
+            // DO NOT push to queue immediately — JIT engine will do it at buffer window
             resolve({
                 status: "confirmed",
                 booking_id: bookingId,
-                station: selectedStation,
-                scheduled_time: scheduledTime
+                station: targetStation,
+                scheduled_time: `${date}T${time}:00`
             });
         }, 800);
     });
@@ -328,8 +217,8 @@ async function initSession() {
 }
 
 async function loadVehicleProfile(email, userName) {
-    if (el('sidebar-driver-name')) el('sidebar-driver-name').textContent = userName;
-    if (el('sidebar-driver-email')) el('sidebar-driver-email').textContent = email;
+    el('sidebar-driver-name').textContent = userName;
+    el('sidebar-driver-email').textContent = email;
 
     // Helper: get cached profile from localStorage
     const getCachedProfile = () => {
@@ -423,9 +312,9 @@ function initProfileEditor() {
         } catch(e) {}
 
         // Update UI immediately
-        if (el('vehicle-name')) el('vehicle-name').textContent = userProfile.vehicle_name || 'Not set';
-        if (el('vehicle-capacity')) el('vehicle-capacity').textContent = userProfile.charging_capacity ? `${userProfile.charging_capacity} kWh` : '— kWh';
-        if (el('vehicle-charging-type')) el('vehicle-charging-type').textContent = userProfile.charging_type || '—';
+        el('vehicle-name').textContent = userProfile.vehicle_name || 'Not set';
+        el('vehicle-capacity').textContent = userProfile.charging_capacity ? `${userProfile.charging_capacity} kWh` : '— kWh';
+        el('vehicle-charging-type').textContent = userProfile.charging_type || '—';
         if (el('sidebar-driver-name')) el('sidebar-driver-name').textContent = userProfile.vehicle_name || 'Driver';
 
         showToast('Profile updated successfully!', 'success');
@@ -469,7 +358,7 @@ function renderActiveBookings() {
     let q = [];
     try { q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]'); } catch(e){}
 
-    const uid = currentSession?.user?.id || 'demo';
+    const uid = window.currentSession?.user?.id || 'demo';
     const myActive = q.filter(item => item.user_id === uid || (item.user_id === 'demo' && uid === 'demo'));
 
     if (myActive.length === 0) {
@@ -484,7 +373,10 @@ function renderActiveBookings() {
     const now = Date.now();
     list.innerHTML = myActive.map((b, i) => {
         const timeSpent = Math.floor((now - b.timestamp) / 60000);
-        let stationName = b.station_name || 'Target Station';
+        let stationName = 'Target Station';
+        if (b.stationIdx === 1) stationName = 'Beta Station';
+        if (b.stationIdx === 2) stationName = 'Gamma Station';
+        if (b.stationIdx === 0) stationName = 'Alpha Station';
         
         return `
         <div class="bg-white/[0.03] border border-neon/20 p-4 rounded-xl fade-up fade-up-d${i+1 > 3 ? 3 : i+1}">
@@ -524,7 +416,11 @@ window.cancelActiveBooking = function(id) {
         'Keep It',
         'bg-red-500 text-white hover:bg-red-600 shadow-[0_0_15px_rgba(239,68,68,0.3)]',
         () => {
-            removeQueueEntryById(id);
+            try {
+                let q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
+                q = q.filter(item => item.id !== id && item.id != id); // loose equality in case of string/int
+                localStorage.setItem('gridpulz_queue', JSON.stringify(q));
+            } catch(e) {}
             if (el('active-bookings-list')) renderActiveBookings();
             showToast('Slot cancelled successfully.', 'info');
         }
@@ -664,27 +560,16 @@ function handleLiveRedirect(criticalStation, allStations) {
     // Redraw map route
     if (liveMap) {
         // Clear old routes
-        // Clear old routes/markers
-        mapMarkers.forEach(m => m.setMap(null));
-        mapMarkers = [];
+        mapMarkers.filter(m => m._path).forEach(m => liveMap.removeLayer(m));
+        mapMarkers = mapMarkers.filter(m => !m._path);
 
         // Red dashed line to original (cancelled)
         const origLat = result.original.lat || result.original.latitude;
         const origLng = result.original.lng || result.original.longitude;
         if (origLat && origLng && currentLat) {
-            const cancelledRoute = new google.maps.Polyline({
-                path: [{ lat: currentLat, lng: currentLng }, { lat: origLat, lng: origLng }],
-                geodesic: true,
-                strokeColor: '#ef4444',
-                strokeOpacity: 0.4,
-                strokeWeight: 2,
-                icons: [{
-                    icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, scale: 2 },
-                    offset: '0',
-                    repeat: '10px'
-                }],
-                map: liveMap
-            });
+            const cancelledRoute = L.polyline([[currentLat, currentLng], [origLat, origLng]], {
+                color: '#ef4444', weight: 2, dashArray: '6, 8', opacity: 0.4
+            }).addTo(liveMap);
             mapMarkers.push(cancelledRoute);
         }
 
@@ -692,19 +577,10 @@ function handleLiveRedirect(criticalStation, allStations) {
         const altLat = result.alternative.lat || result.alternative.latitude;
         const altLng = result.alternative.lng || result.alternative.longitude;
         if (altLat && altLng && currentLat) {
-            const newRoute = new google.maps.Polyline({
-                path: [{ lat: currentLat, lng: currentLng }, { lat: altLat, lng: altLng }],
-                geodesic: true,
-                strokeColor: '#BFFF00',
-                strokeOpacity: 0.8,
-                strokeWeight: 4,
-                map: liveMap
-            });
-            
-            const bounds = new google.maps.LatLngBounds();
-            bounds.extend({ lat: currentLat, lng: currentLng });
-            bounds.extend({ lat: altLat, lng: altLng });
-            liveMap.fitBounds(bounds);
+            const newRoute = L.polyline([[currentLat, currentLng], [altLat, altLng]], {
+                color: '#BFFF00', weight: 4, dashArray: '12, 6'
+            }).addTo(liveMap);
+            liveMap.fitBounds(newRoute.getBounds(), { padding: [50, 50] });
             mapMarkers.push(newRoute);
         }
     }
@@ -716,13 +592,263 @@ function initChargeNow() {
     const slider = el('soc-slider');
     if (!slider) return;
     const valueEl = el('soc-value');
-
+    
+    // Slider Visuals
     slider.addEventListener('input', () => {
         const val = slider.value;
         valueEl.innerHTML = `${val}<span class="text-lg text-neon/50">%</span>`;
     });
 
-    console.log('Charge Now UI initialized (map handled by charge-now.js)');
+    // GPS
+    const gpsBtn = el('gps-btn');
+    if (gpsBtn) {
+    gpsBtn.addEventListener('click', () => {
+        if (!navigator.geolocation) return showToast('Geolocation not supported', 'error');
+        el('current-location').textContent = 'Detecting...';
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                currentLat = pos.coords.latitude; currentLng = pos.coords.longitude;
+                el('current-location').textContent = `${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+                showToast(`GPS locked`, 'success');
+                
+                // Track location & SoC to DB
+                if (currentSession && currentSession.user && window.insertLiveData) {
+                    const soc = parseInt(slider.value, 10);
+                    window.insertLiveData(currentSession.user.id, soc, currentLat, currentLng);
+                }
+                
+                // Initialize Map if not already
+                if (!liveMap && el('live-map')) {
+                    liveMap = L.map('live-map', { zoomControl: false }).setView([currentLat, currentLng], 13);
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(liveMap);
+                } else if (liveMap) {
+                    liveMap.setView([currentLat, currentLng], 13);
+                }
+                
+                // Plot User Location
+                mapMarkers.forEach(m => liveMap.removeLayer(m));
+                mapMarkers = [];
+                
+                const userIcon = L.divIcon({ className: 'bg-transparent', html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse"></div>`, iconSize: [16,16] });
+                mapMarkers.push(L.marker([currentLat, currentLng], { icon: userIcon }).addTo(liveMap));
+                
+                // Fetch & Plot All Stations with Dynamic Markers
+                try {
+                    const nearby = await window.getNearbyStations(currentLat, currentLng, 99999);
+                    const userCharger = getUserChargerType();
+                    
+                    // Populate station cache for realtime module
+                    if (window.stationsCache) {
+                        window.stationsCache.length = 0;
+                        nearby.forEach(s => window.stationsCache.push(s));
+                    }
+
+                    const markerGroup = L.featureGroup();
+                    markerGroup.addLayer(L.marker([currentLat, currentLng], { icon: userIcon }));
+
+                    nearby.forEach(st => {
+                        if (window.buildStationMarker) {
+                            // Use rich 3-dimension markers from realtime module
+                            const marker = window.buildStationMarker(st, userCharger, null);
+                            if (marker) {
+                                marker.addTo(liveMap);
+                                mapMarkers.push(marker);
+                                markerGroup.addLayer(marker);
+                                if (window.stationMarkerMap) window.stationMarkerMap[st.id] = marker;
+                            }
+                        } else {
+                            // Fallback to simple markers
+                            const stRisk = assessStationRisk(st);
+                            const color = stRisk.risk === 'HIGH' ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]' : stRisk.risk === 'MODERATE' ? 'bg-yellow-500 shadow-[0_0_15px_rgba(245,158,11,0.8)]' : 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)]';
+                            const stIcon = L.divIcon({ className: 'bg-transparent', html: `<div class="w-5 h-5 ${color} rounded-full border-2 border-[#131318]"></div>`, iconSize: [20,20] });
+                            const m = L.marker([st.lat || st.latitude, st.lng || st.longitude], { icon: stIcon }).addTo(liveMap);
+                            m.bindPopup(`<div class="bg-surface p-1"><strong class="block text-sm text-white mb-1 font-headline">${st.name}</strong><span class="text-[10px] uppercase tracking-widest text-[#BFFF00]">${st.dist ? st.dist.toFixed(2) : '--'} km away</span><br><span class="text-[9px]" style="color:${stRisk.color}">${stRisk.risk} Load (${stRisk.load}%)</span></div>`);
+                            mapMarkers.push(m);
+                            markerGroup.addLayer(m);
+                        }
+                    });
+                    
+                    // Zoom out map to show both the user and all loaded stations
+                    liveMap.fitBounds(markerGroup.getBounds(), { padding: [50, 50], maxZoom: 14 });
+
+                    // Start Supabase real-time subscription
+                    if (window.subscribeToStations) {
+                        window.subscribeToStations(
+                            currentLat, currentLng, 30, liveMap, userCharger,
+                            handleLiveRedirect
+                        );
+                    }
+                } catch(e) { console.warn('Station fetch failed:', e); }
+
+            },
+            () => {
+                el('current-location').textContent = 'Permission denied';
+            }
+        );
+    });
+    } // end if (gpsBtn)
+
+    // API Call (Modal Trigger)
+    const reqBtn = el('request-slot-btn');
+    const bookingModal = el('confirm-booking-modal');
+    if (!reqBtn || !bookingModal) return;
+    
+    reqBtn.addEventListener('click', () => {
+        bookingModal.classList.remove('hidden');
+    });
+
+    el('modal-cancel-btn').addEventListener('click', () => {
+        bookingModal.classList.add('hidden');
+    });
+
+    el('modal-confirm-btn').addEventListener('click', async (e) => {
+        bookingModal.classList.add('hidden');
+        const btn = el('request-slot-btn');
+        const resultCard = el('booking-result');
+        const rerouteAlert = el('reroute-alert');
+        const soc = parseInt(slider.value, 10);
+        
+        // UI Loading
+        btn.innerHTML = `<span class="material-symbols-outlined text-lg animate-spin">refresh</span> Checking grid status...`;
+        btn.disabled = true;
+        resultCard.classList.add('hidden');
+        if (rerouteAlert) rerouteAlert.classList.add('hidden');
+
+        try {
+            const res = await apiChargeNow(soc);
+            
+            // Clear previous map routes
+            mapMarkers.filter(m => m._path || m.options?.dashArray).forEach(m => { if (liveMap) liveMap.removeLayer(m); });
+            mapMarkers = mapMarkers.filter(m => !(m._path || m.options?.dashArray));
+
+            resultCard.classList.remove('hidden');
+
+            if (res.status === 'confirmed') {
+                const riskBadge = res.station_risk ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest" style="background:${res.station_risk.color}20; color:${res.station_risk.color}; border: 1px solid ${res.station_risk.color}40;"><span class="material-symbols-outlined text-[10px]">monitoring</span>${res.station_risk.risk} Load (${res.station_risk.load}%)</span>` : '';
+
+                resultCard.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent pointer-events-none"></div>
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                            <span class="material-symbols-outlined text-2xl">check_circle</span>
+                        </div>
+                        <div>
+                            <h3 class="font-headline font-bold text-white text-lg">Slot Booked Successfully</h3>
+                            <p class="text-xs text-on-surface-variant/60 mt-1">
+                                Scheduled at <strong class="text-emerald-400">${res.station.name}</strong> • Time: ${res.slot_time}
+                            </p>
+                            <div class="flex items-center gap-3 mt-2">
+                                <span class="text-[10px] text-on-surface-variant/40 uppercase tracking-widest flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[12px]">my_location</span> ${res.station.dist || '--'} km
+                                </span>
+                                ${riskBadge}
+                            </div>
+                            ${res.warning ? `<p class="text-[10px] text-yellow-400/80 mt-2 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">warning</span> ${res.warning}</p>` : ''}
+                        </div>
+                    </div>`;
+
+                if (liveMap && res.station && (res.station.lat || res.station.latitude)) {
+                     const destLat = res.station.lat || res.station.latitude;
+                     const destLng = res.station.lng || res.station.longitude;
+                     const route = L.polyline([[currentLat, currentLng], [destLat, destLng]], { color: '#10b981', weight: 4 }).addTo(liveMap);
+                     liveMap.fitBounds(route.getBounds(), { padding: [50, 50] });
+                     mapMarkers.push(route);
+                }
+
+            } else if (res.status === 'rerouted') {
+                // === GRID SAFEGUARD: REROUTE ALERT ===
+                
+                // 1. Show the prominent top-bar reroute alert
+                if (rerouteAlert) {
+                    rerouteAlert.classList.remove('hidden');
+                    rerouteAlert.innerHTML = `
+                        <div class="flex items-center gap-4 w-full">
+                            <div class="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-red-400 text-xl animate-pulse">crisis_alert</span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-headline font-bold text-sm text-white uppercase tracking-wider">Grid Safeguard Active</span>
+                                    <span class="bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest">Rerouted</span>
+                                </div>
+                                <p class="text-xs text-on-surface-variant/70">
+                                    <strong class="text-red-400">${res.original_station.name}</strong> is at 
+                                    <strong class="text-red-400">${res.original_risk.load}% grid load</strong> (Peak). 
+                                    Route optimized to <strong class="text-neon">${res.station.name}</strong> 
+                                    (${res.station.dist ? res.station.dist.toFixed(1) : '--'} km, ${res.station_risk.load}% load).
+                                </p>
+                            </div>
+                            <button onclick="this.closest('#reroute-alert').classList.add('hidden')" class="text-white/30 hover:text-white p-1 rounded transition-colors shrink-0">
+                                <span class="material-symbols-outlined text-lg">close</span>
+                            </button>
+                        </div>`;
+                }
+
+                // 2. Show the result card
+                resultCard.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-red-500/5 to-transparent pointer-events-none"></div>
+                    <div class="flex items-start gap-4 relative z-10">
+                        <div class="w-12 h-12 rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center text-yellow-400 shrink-0">
+                            <span class="material-symbols-outlined text-2xl">turn_right</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-headline font-bold text-white text-lg flex items-center gap-2">Route Optimized</h3>
+                            <p class="text-xs text-on-surface-variant/60 mt-1">
+                                To ensure grid stability, you've been routed to 
+                                <strong class="text-neon">${res.station.name}</strong>
+                                instead of <span class="line-through text-red-400/60">${res.original_station.name}</span>.
+                            </p>
+                            <div class="grid grid-cols-2 gap-3 mt-4">
+                                <div class="bg-red-500/5 border border-red-500/10 rounded-lg p-3">
+                                    <div class="text-[9px] uppercase tracking-widest text-red-400/60 mb-1">Original</div>
+                                    <div class="text-xs font-bold text-red-400 line-through">${res.original_station.name}</div>
+                                    <div class="text-[10px] text-red-400/50 mt-0.5">${res.original_risk.load}% Load • ${res.original_station.dist ? res.original_station.dist.toFixed(1) : '--'} km</div>
+                                </div>
+                                <div class="bg-neon/5 border border-neon/10 rounded-lg p-3">
+                                    <div class="text-[9px] uppercase tracking-widest text-neon/60 mb-1">Optimized To</div>
+                                    <div class="text-xs font-bold text-neon">${res.station.name}</div>
+                                    <div class="text-[10px] text-neon/50 mt-0.5">${res.station_risk.load}% Load • ${res.station.dist ? res.station.dist.toFixed(1) : '--'} km</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                // 3. Update map: strikethrough to original + green route to alternative
+                if (liveMap && currentLat) {
+                    // Red dashed line to original station (cancelled route)
+                    if (res.original_station.lat || res.original_station.latitude) {
+                        const origLat = res.original_station.lat || res.original_station.latitude;
+                        const origLng = res.original_station.lng || res.original_station.longitude;
+                        const cancelledRoute = L.polyline([[currentLat, currentLng], [origLat, origLng]], { 
+                            color: '#ef4444', weight: 2, dashArray: '6, 8', opacity: 0.4 
+                        }).addTo(liveMap);
+                        mapMarkers.push(cancelledRoute);
+                    }
+                    
+                    // Green solid line to alternative station (new route)
+                    if (res.station.lat || res.station.latitude) {
+                        const destLat = res.station.lat || res.station.latitude;
+                        const destLng = res.station.lng || res.station.longitude;
+                        const newRoute = L.polyline([[currentLat, currentLng], [destLat, destLng]], { 
+                            color: '#BFFF00', weight: 4, dashArray: '12, 6' 
+                        }).addTo(liveMap);
+                        liveMap.fitBounds(newRoute.getBounds(), { padding: [50, 50] });
+                        mapMarkers.push(newRoute);
+                    }
+                }
+
+                showToast(`Grid Safeguard: Rerouted from ${res.original_station.name} to ${res.station.name}`, 'warning', 8000);
+            }
+
+        } catch (err) {
+            showToast('Failed to allocate slot', 'error');
+        } finally {
+            btn.innerHTML = `Request Charging Slot <span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>`;
+            btn.disabled = false;
+        }
+    });
 }
 
 // =============================================================
@@ -737,40 +863,71 @@ function getBookingTemporalState(booking) {
     return 'active';
 }
 
-function getBookingBadgeHTML(state) {
-    if (state === 'upcoming') return `<div class="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] uppercase tracking-widest text-white/40">Upcoming</div>`;
-    if (state === 'activating') return `<div class="px-2 py-1 rounded-full bg-neon/10 border border-neon/30 text-[9px] uppercase tracking-widest text-neon animate-pulse">Activating</div>`;
-    return `<div class="px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] uppercase tracking-widest text-emerald-400">Ready</div>`;
+function getBookingBadgeHTML(state, diffMins) {
+    if (state === 'upcoming') {
+        return `<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+                    <span class="material-symbols-outlined text-[12px] text-white/40">schedule</span>
+                    <span class="text-[9px] uppercase tracking-widest text-white/40 font-bold">Upcoming</span>
+                </div>`;
+    }
+    if (state === 'activating') {
+        return `<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neon/10 border border-neon/30 animate-pulse">
+                    <span class="material-symbols-outlined text-[12px] text-neon">bolt</span>
+                    <span class="text-[9px] uppercase tracking-widest text-neon font-bold">Activating • Queue Active</span>
+                </div>`;
+    }
+    return `<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                <span class="material-symbols-outlined text-[12px] text-emerald-400">electric_bolt</span>
+                <span class="text-[9px] uppercase tracking-widest text-emerald-400 font-bold">Slot Ready</span>
+            </div>`;
 }
 
 function renderUpcomingBookings() {
     const list = el('upcoming-bookings-list');
-    if (!list) return;
     
     if (upcomingBookings.length === 0) {
-        list.innerHTML = `<div class="text-center py-10 opacity-30 text-[10px] uppercase tracking-widest">No prebookings</div>`;
+        list.innerHTML = `
+            <div class="text-center py-10">
+                <span class="material-symbols-outlined text-4xl text-on-surface-variant/10 mb-2 block">event_busy</span>
+                <p class="text-[10px] text-on-surface-variant/40 uppercase tracking-widest">No upcoming prebookings found</p>
+            </div>`;
         return;
     }
 
+    const now = Date.now();
     list.innerHTML = upcomingBookings.map((b, i) => {
         const dateObj = new Date(b.scheduled_time);
+        const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const bTime = dateObj.getTime();
+        const diffMins = (bTime - now) / 60000;
         const tState = getBookingTemporalState(b);
+        const badge = getBookingBadgeHTML(tState, diffMins);
+        const borderColor = tState === 'activating' ? 'border-neon/20' : tState === 'active' ? 'border-emerald-500/20' : 'border-white/5';
+        
         return `
-        <div class="bg-white/[0.03] border border-white/5 p-4 rounded-xl fade-up fade-up-d${(i%3)+1}">
+        <div class="bg-white/[0.03] border ${borderColor} p-4 rounded-xl fade-up fade-up-d${i+1 > 3 ? 3 : i+1}">
             <div class="flex items-center gap-4">
-                <div class="bg-neon/10 border border-neon/20 w-10 h-10 rounded flex flex-col items-center justify-center text-neon">
-                    <span class="text-[8px] uppercase opacity-60">${dateObj.toLocaleString('en-US', { weekday: 'short'})}</span>
-                    <span class="font-bold text-xs">${dateObj.getDate()}</span>
+                <div class="bg-neon/10 border border-neon/20 w-12 h-12 rounded-lg flex flex-col items-center justify-center text-neon shrink-0">
+                    <span class="text-[9px] uppercase tracking-widest opacity-70 mb-0.5">${dateObj.toLocaleString('en-US', { weekday: 'short'})}</span>
+                    <span class="font-mono font-bold text-sm leading-none">${dateObj.getDate()}</span>
                 </div>
+                
                 <div class="flex-1 min-w-0">
-                    <h4 class="font-headline font-bold text-white text-xs truncate">${b.station.name}</h4>
-                    <div class="text-[9px] text-on-surface-variant/40 mt-1">${dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • ${b.booking_id}</div>
+                    <h4 class="font-headline font-bold text-white text-sm truncate">${b.station.name}</h4>
+                    <div class="text-[10px] text-on-surface-variant/50 uppercase tracking-widest mt-1 flex items-center gap-2">
+                        <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">schedule</span> ${timeStr}</span> • 
+                        <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">badge</span> ${b.booking_id}</span>
+                    </div>
                 </div>
-                <button onclick="cancelBooking('${b.booking_id}')" class="text-red-400/40 hover:text-red-400 transition-colors"><span class="material-symbols-outlined text-lg">cancel</span></button>
+                
+                <button onclick="cancelBooking('${b.booking_id}')" class="text-red-400/50 hover:text-red-400 hover:bg-red-400/10 p-2 rounded transition-colors" title="Cancel Booking">
+                    <span class="material-symbols-outlined text-lg">cancel</span>
+                </button>
             </div>
             <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                ${getBookingBadgeHTML(tState)}
-                <span class="text-[9px] text-on-surface-variant/30 font-mono">${b.soc}% Target SoC</span>
+                ${badge}
+                <span class="text-[9px] font-mono text-on-surface-variant/30">${diffMins > 0 ? Math.ceil(diffMins) + ' min away' : 'Now'}</span>
             </div>
         </div>`;
     }).join('');
@@ -836,7 +993,11 @@ window.cancelBooking = function(id) {
             showToast('Slot not occupied. Booking cancelled successfully.', 'info');
             
             // Remove from global queue
-            removeQueueEntryById(id);
+            try {
+                let q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
+                q = q.filter(item => item.id !== id);
+                localStorage.setItem('gridpulz_queue', JSON.stringify(q));
+            } catch(e) {}
             
             // Second Prompt: Reschedule
             setTimeout(() => {
@@ -859,12 +1020,6 @@ window.cancelBooking = function(id) {
 let fullMap = null;
 let fullMapMarkers = [];
 
-// Global initMap function for Google Maps callback
-window.initMap = function() {
-    console.log('Google Maps API loaded via callback');
-    window.googleMapsReady = true;
-};
-
 function initStationMap() {
     const mapContainer = el('full-live-map');
     if (!mapContainer) return;
@@ -874,26 +1029,12 @@ function initStationMap() {
     const syncCountdown = el('sync-countdown');
     const mapStationCount = el('map-station-count');
 
-    // Check if Leaflet is loaded
-    if (typeof L === 'undefined') {
-        console.error('Leaflet not loaded');
-        if (statusText) statusText.textContent = 'MAP LIBRARY ERROR';
-        if (loadingOverlay) {
-            loadingOverlay.innerHTML = `
-                <div class="text-center">
-                    <span class="material-symbols-outlined text-4xl text-red-400 mb-2 block">error</span>
-                    <p class="font-mono text-xs text-red-400 tracking-widest text-center px-4">Map library failed to load</p>
-                    <p class="font-mono text-[10px] text-white/40 text-center px-4 mt-2">Please check your internet connection and refresh</p>
-                </div>
-            `;
-        }
-        return;
-    }
-
+    // Start UI
     if (statusText) statusText.innerHTML = 'ACQUIRING GPS LOCK<span class="animate-pulse">...</span>';
 
     if (!navigator.geolocation) {
         if (statusText) statusText.textContent = 'GEOLOCATION NOT SUPPORTED';
+        showToast('Geolocation not supported', 'error');
         return;
     }
 
@@ -904,82 +1045,95 @@ function initStationMap() {
             
             if (statusText) statusText.innerHTML = 'FETCHING STATIONS<span class="animate-pulse">...</span>';
 
-            // Initialize Leaflet Map
+            // Initialize Map
             if (!fullMap) {
-                fullMap = L.map('full-live-map').setView([currentLat, currentLng], 13);
-                
-                // Add dark-themed OpenStreetMap tiles
+                fullMap = L.map('full-live-map', { zoomControl: true }).setView([currentLat, currentLng], 13);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                    subdomains: 'abcd',
-                    maxZoom: 20
+                    attribution: '&copy; OpenStreetMap',
+                    maxZoom: 19
                 }).addTo(fullMap);
             } else {
                 fullMap.setView([currentLat, currentLng], 13);
             }
             
-            // Clear existing markers
+            // Plot User Location
             fullMapMarkers.forEach(m => fullMap.removeLayer(m));
             fullMapMarkers = [];
             
-            // User Marker - blue circle
-            const userIcon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color: #3b82f6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
-                iconSize: [12, 12],
-                iconAnchor: [6, 6]
-            });
-            const userM = L.marker([currentLat, currentLng], { icon: userIcon }).addTo(fullMap);
-            fullMapMarkers.push(userM);
+            const userIcon = L.divIcon({ className: 'bg-transparent', html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_rgba(59,130,246,0.9)] animate-pulse"></div>`, iconSize: [16,16] });
+            fullMapMarkers.push(L.marker([currentLat, currentLng], { icon: userIcon }).addTo(fullMap));
             
+            // Fetch & Plot All Stations
             try {
-                console.log('Fetching stations near:', currentLat, currentLng);
                 const nearby = await window.getNearbyStations(currentLat, currentLng, 99999);
-                console.log('Nearby stations found:', nearby.length, nearby);
+                const userCharger = getUserChargerType();
+                
                 if (mapStationCount) mapStationCount.textContent = nearby.length;
 
+                const markerGroup = L.featureGroup();
+                markerGroup.addLayer(L.marker([currentLat, currentLng], { icon: userIcon }));
+
                 nearby.forEach(st => {
-                    console.log('Adding marker for station:', st.name, 'at', st.lat || st.latitude, st.lng || st.longitude);
-                    const stRisk = assessStationRisk(st);
-                    
-                    // Station marker - colored circle based on risk
-                    const stationIcon = L.divIcon({
-                        className: 'custom-div-icon',
-                        html: `<div style="background-color: ${stRisk.color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);"></div>`,
-                        iconSize: [16, 16],
-                        iconAnchor: [8, 8]
-                    });
-                    
-                    const m = L.marker([st.lat || st.latitude, st.lng || st.longitude], { icon: stationIcon }).addTo(fullMap);
-                    
-                    // Add tooltip on hover (shows name and location)
-                    const tooltipContent = `<div style="color:#fff; font-family:Michroma; font-size:11px; font-weight:bold;">${st.name}</div><div style="color:#aaa; font-size:9px;">${st.lat?.toFixed(4) || st.latitude?.toFixed(4)}, ${st.lng?.toFixed(4) || st.longitude?.toFixed(4)}</div>`;
-                    m.bindTooltip(tooltipContent, {
-                        direction: 'top',
-                        offset: [0, -10],
-                        className: 'custom-tooltip'
-                    });
-                    
-                    // Add popup on click (shows detailed info)
-                    const popupContent = `<div style="color:#000; font-family:Michroma; font-size:10px;"><b>${st.name}</b><br>Load: ${stRisk.load}%<br>Slots: ${st.free_slots || 0}/${st.total_slots || 0}</div>`;
-                    m.bindPopup(popupContent);
-                    
-                    fullMapMarkers.push(m);
+                    if (window.buildStationMarker) {
+                        const marker = window.buildStationMarker(st, userCharger, null);
+                        if (marker) {
+                            marker.addTo(fullMap);
+                            fullMapMarkers.push(marker);
+                            markerGroup.addLayer(marker);
+                            if (window.stationMarkerMap) window.stationMarkerMap[st.id] = marker;
+                        }
+                    } else {
+                        // Fallback
+                        const stRisk = assessStationRisk(st);
+                        const color = stRisk.risk === 'HIGH' ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]' : stRisk.risk === 'MODERATE' ? 'bg-yellow-500 shadow-[0_0_15px_rgba(245,158,11,0.8)]' : 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)]';
+                        const stIcon = L.divIcon({ className: 'bg-transparent', html: `<div class="w-5 h-5 ${color} rounded-full border-2 border-[#131318]"></div>`, iconSize: [20,20] });
+                        const m = L.marker([st.lat || st.latitude, st.lng || st.longitude], { icon: stIcon }).addTo(fullMap);
+                        m.bindPopup(`<div class="bg-surface p-1"><strong class="block text-sm text-white mb-1 font-headline">${st.name}</strong><span class="text-[10px] uppercase tracking-widest text-[#BFFF00]">${st.dist ? st.dist.toFixed(2) : '--'} km away</span><br><span class="text-[9px]" style="color:${stRisk.color}">${stRisk.risk} Load (${stRisk.load}%)</span></div>`);
+                        fullMapMarkers.push(m);
+                        markerGroup.addLayer(m);
+                    }
                 });
-            } catch(e) { console.error('Station fetch failed:', e); }
+                
+                // Zoom map to show both user and all stations
+                if (nearby.length > 0) {
+                    fullMap.fitBounds(markerGroup.getBounds(), { padding: [50, 50], maxZoom: 14 });
+                }
 
+                // Start Live Sync if available
+                if (window.subscribeToStations) {
+                    window.subscribeToStations(
+                        currentLat, currentLng, 30, fullMap, userCharger,
+                        (st, cache) => console.log('Station critical redirect observed in live-map:', st)
+                    );
+                }
+            } catch(e) { 
+                console.warn('Station fetch failed:', e); 
+            }
+
+            // Hide Loading Overlay
             if (statusText) statusText.textContent = 'SYNC COMPLETE';
-            if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            setTimeout(() => {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('opacity-0');
+                    setTimeout(() => loadingOverlay.classList.add('hidden'), 500);
+                }
+            }, 600);
 
+            // Mock sync timer
             let syncSeconds = 30;
             setInterval(() => {
                 syncSeconds--;
                 if(syncSeconds < 0) syncSeconds = 30;
                 if(syncCountdown) syncCountdown.textContent = syncSeconds + 's';
             }, 1000);
+
         },
         () => {
             if (statusText) statusText.textContent = 'PERMISSION DENIED';
+            showToast('GPS permission required to locate nearby charging stations', 'error');
+            setTimeout(() => {
+                if (loadingOverlay) loadingOverlay.classList.add('hidden');
+            }, 2000);
         }
     );
 }
@@ -987,146 +1141,14 @@ function initStationMap() {
 function initPrebook() {
     // Guard for pages without the prebook form
     if (!el('prebook-date')) return;
-
-    function formatLocalDate(date) {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    }
-
-    function getTodayStart() {
-        const now = new Date();
-        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    }
-
-    function parseSelectedDate(dateStr) {
-        if (!dateStr) return null;
-        const [y, m, d] = dateStr.split('-').map(Number);
-        if (!y || !m || !d) return null;
-        const parsed = new Date(y, m - 1, d);
-        return Number.isNaN(parsed.getTime()) ? null : parsed;
-    }
     
-    // Default to a valid future slot and enforce min date/time.
-    const now = new Date();
-    const next = new Date(now.getTime() + 60 * 60000);
-    const minDate = formatLocalDate(now);
-    el('prebook-date').min = minDate;
-    el('prebook-date').value = formatLocalDate(next);
-    el('prebook-time').value = `${String(next.getHours()).padStart(2, '0')}:${String(next.getMinutes()).padStart(2, '0')}`;
-
-    const btnSearchCity = el('btn-search-city');
-    const selectStation = el('prebook-station-select');
-    
-    // Auto-populate all stations initially
-    if (selectStation && window.getAllStationsCached) {
-        window.getAllStationsCached().then(stations => {
-            if (stations && stations.length > 0) {
-                selectStation.innerHTML = '<option value="" disabled selected>Select a station...</option>' + 
-                    stations.map(s => `<option value="${s.id}">${s.name} (${s.city || 'Unknown'})</option>`).join('');
-            }
-        }).catch(e => console.warn('Prebook initial stations fetch failed', e));
-    }
-    
-    if (btnSearchCity && selectStation) {
-        btnSearchCity.addEventListener('click', async () => {
-            const city = el('prebook-location').value.trim();
-            if (!city) {
-                showToast('Please enter a city or area name first.', 'error');
-                return;
-            }
-            
-            btnSearchCity.innerHTML = `<span class="material-symbols-outlined text-[10px] animate-spin">refresh</span>`;
-            btnSearchCity.disabled = true;
-            
-            try {
-                const geocoder = new google.maps.Geocoder();
-                const result = await new Promise((res, rej) => {
-                    geocoder.geocode({ address: city }, (results, status) => {
-                        if (status === 'OK') res(results[0].geometry.location);
-                        else rej(status);
-                    });
-                });
-                
-                const searchLat = result.lat();
-                const searchLng = result.lng();
-                
-                const nearby = await window.getNearbyStations(searchLat, searchLng, 1000);
-                if (!nearby || nearby.length === 0) {
-                    showToast('No stations found in ' + city, 'error');
-                    selectStation.innerHTML = `<option value="" disabled selected>No stations found</option>`;
-                } else {
-                    const soc = parseInt(el('prebook-soc').value, 10) || 40;
-                    const ranked = window.rankStationsBySoC(nearby, soc);
-                    
-                    selectStation.innerHTML = ranked.map(s => 
-                        `<option value="${s.id}">${s.name} (${s.dist ? s.dist.toFixed(1) + ' km' : ''})</option>`
-                    ).join('');
-                    showToast(`Found ${ranked.length} stations in ${city}`, 'success');
-                }
-            } catch (e) {
-                console.error('Geocoding/fetch failed:', e);
-                showToast('Could not find city or stations.', 'error');
-            } finally {
-                btnSearchCity.innerHTML = `Search`;
-                btnSearchCity.disabled = false;
-            }
-        });
-    }
-
-    function syncMinTime() {
-        const selectedDate = el('prebook-date').value;
-        const today = new Date();
-        const todayStr = formatLocalDate(today);
-
-        // Reset invalid manual edits to enforce date >= today.
-        const selectedDateOnly = parseSelectedDate(selectedDate);
-        const todayStart = getTodayStart();
-        if (!selectedDateOnly || selectedDateOnly < todayStart) {
-            el('prebook-date').value = todayStr;
-        }
-
-        const effectiveSelectedDate = el('prebook-date').value;
-
-        if (effectiveSelectedDate === todayStr) {
-            const minH = String(today.getHours()).padStart(2, '0');
-            const minM = String(today.getMinutes()).padStart(2, '0');
-            el('prebook-time').min = `${minH}:${minM}`;
-        } else {
-            el('prebook-time').min = '';
-        }
-    }
-
-    function getSelectedDateTime() {
-        const date = el('prebook-date').value;
-        const time = el('prebook-time').value;
-        if (!date || !time) return null;
-        const selected = new Date(`${date}T${time}:00`);
-        return Number.isNaN(selected.getTime()) ? null : selected;
-    }
-
-    function isPastDateSelection(dateStr) {
-        const selectedDateOnly = parseSelectedDate(dateStr);
-        if (!selectedDateOnly) return true;
-        return selectedDateOnly < getTodayStart();
-    }
-
-    syncMinTime();
-    el('prebook-date').addEventListener('change', syncMinTime);
+    // Default dates
+    const today = new Date();
+    el('prebook-date').valueAsDate = today;
+    el('prebook-time').value = '14:00';
 
     el('prebook-form').addEventListener('submit', (e) => {
         e.preventDefault();
-        const selectedDate = el('prebook-date').value;
-        if (isPastDateSelection(selectedDate)) {
-            showToast('Please choose today or a future date for prebooking.', 'error');
-            return;
-        }
-        const selected = getSelectedDateTime();
-        if (!selected || selected.getTime() <= Date.now()) {
-            showToast('Please select a valid future date and time for prebooking.', 'error');
-            return;
-        }
         el('confirm-prebook-modal').classList.remove('hidden');
     });
 
@@ -1140,44 +1162,17 @@ function initPrebook() {
         const soc = parseInt(el('prebook-soc').value, 10);
         const date = el('prebook-date').value;
         const time = el('prebook-time').value;
-        const stationId = el('prebook-station-select')?.value;
-        
-        if (!stationId) {
-            showToast('Please search and select a station first.', 'error');
-            return;
-        }
-
-        if (isPastDateSelection(date)) {
-            showToast('Prebooking date cannot be in the past.', 'error');
-            return;
-        }
-        const selected = new Date(`${date}T${time}:00`);
-        if (!date || !time || Number.isNaN(selected.getTime()) || selected.getTime() <= Date.now()) {
-            showToast('Selected prebook time is invalid. Pick a future time.', 'error');
-            return;
-        }
         const btn = el('prebook-form').querySelector('button[type="submit"]');
 
         btn.disabled = true;
         btn.innerHTML = `<span class="material-symbols-outlined text-sm animate-spin">refresh</span> Processing...`;
 
         try {
-            console.log('📝 Starting prebook with SoC:', soc, 'Date:', date, 'Time:', time, 'Station:', stationId);
-            const res = await apiPrebook(soc, date, time, stationId);
+            const res = await apiPrebook(soc, date, time);
             if (res.status === 'confirmed') {
-                res.soc = soc;
-                res.jit_pushed = true;
+                res.soc = soc; // Store SoC for JIT queue push
                 upcomingBookings.push(res);
                 saveUpcoming();
-
-                // CRITICAL: Enqueue prebooking into priority queue immediately
-                console.log('🚀 Pushing to priority queue:', { soc, station: res.station.name, booking_id: res.booking_id });
-                simulateQueuePush(soc, res.station, res.booking_id, {
-                    booked_time: res.scheduled_time,
-                    station_id: res.station.id,
-                    expires_at: new Date(res.scheduled_time).getTime() + SLOT_ACTIVE_WINDOW_MINS * 60000
-                });
-
                 showToast(`Slot occupied. Prebooking confirmed for ${res.station.name}`, 'success');
                 renderUpcomingBookings();
                 
@@ -1187,7 +1182,6 @@ function initPrebook() {
                 }, 4000);
             }
         } catch(e) {
-            console.error('❌ Prebook error:', e);
             showToast('Failed to prebook slot', 'error');
         } finally {
             btn.disabled = false;
@@ -1203,22 +1197,36 @@ function startNotificationEngine() {
     setInterval(() => {
         const now = Date.now();
         let needsRerender = false;
-        let removedExpiredBookings = false;
 
-        upcomingBookings = upcomingBookings.filter(b => {
+        upcomingBookings.forEach(b => {
             const bTime = new Date(b.scheduled_time).getTime();
             const diffMins = (bTime - now) / 60000;
-
-            // Dequeue expired/finished bookings from both local upcoming list and priority queue.
-            if (diffMins < -SLOT_ACTIVE_WINDOW_MINS) {
-                removeQueueEntryById(b.booking_id);
-                removedExpiredBookings = true;
-                return false;
-            }
             
             // === JIT Queue Push: Push to scheduler queue when entering 15-min buffer ===
             if (diffMins >= 0 && diffMins <= 15 && !b.jit_pushed) {
                 b.jit_pushed = true;
+                // Push to priority queue with booked_time so scheduler applies temporal boost
+                try {
+                    let q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
+                    let sIdx = 0;
+                    if (b.station && b.station.name) {
+                        if (b.station.name.includes('Beta')) sIdx = 1;
+                        if (b.station.name.includes('Gamma')) sIdx = 2;
+                    }
+                    const vName = userProfile && userProfile.vehicle_name !== 'Not set' ? userProfile.vehicle_name : ('Driver-' + Math.floor(Math.random()*1000));
+                    q.push({
+                        id: b.booking_id,
+                        name: vName,
+                        battery: b.soc || 40,
+                        stationIdx: sIdx,
+                        waitMins: 0,
+                        timestamp: Date.now(),
+                        isExternal: true,
+                        booked_time: b.scheduled_time
+                    });
+                    localStorage.setItem('gridpulz_queue', JSON.stringify(q));
+                } catch(e) {}
+
                 showToast(`<strong>Slot Activating!</strong> Your pre-booking at <strong>${b.station.name}</strong> is entering the priority queue. Please head to the station.`, 'info', 12000);
                 needsRerender = true;
             }
@@ -1231,16 +1239,7 @@ function startNotificationEngine() {
                 b.notified_5m = true;
                 showToast(`Urgent: Your slot at <strong>${b.station.name}</strong> is arriving in just ${Math.ceil(diffMins)} minutes!`, 'error', 15000);
             }
-            return true;
         });
-
-        if (removedExpiredBookings) {
-            saveUpcoming();
-            needsRerender = true;
-        }
-
-        // Also cleanup old immediate queue items so finished sessions are dequeued.
-        cleanupExpiredQueueEntries(now);
 
         // Re-render to update temporal state badges
         if (needsRerender) {
@@ -1258,157 +1257,10 @@ function startNotificationEngine() {
 
 
 // =============================================================
-// ML PREDICTION
-// =============================================================
-async function fetchMLPrediction() {
-    try {
-        console.log("Fetching ML prediction...");
-        const response = await fetch(`${API_BASE_URL}/grid-prediction`);
-        if (!response.ok) {
-            console.error('Failed to fetch ML prediction:', response.status, response.statusText);
-            return null;
-        }
-        const data = await response.json();
-        console.log('ML Prediction API response:', data);
-        return data;
-    } catch (error) {
-        console.error('Error fetching ML prediction:', error);
-        return null;
-    }
-}
-
-function updatePredictionUI(data) {
-    console.log('=== updatePredictionUI called ===');
-    console.log('Data received:', data);
-    
-    if (!data) {
-        console.error('No prediction data available - data is null/undefined');
-        return;
-    }
-
-    // Convert Watts to kW for display
-    const currentLoadKW = (data.current_load_watts || 0) / 1000;
-    const predictedLoadKW = (data.predicted_load_watts || 0) / 1000;
-    
-    console.log('Converted values:');
-    console.log('- Current load kW:', currentLoadKW);
-    console.log('- Predicted load kW:', predictedLoadKW);
-    
-    // Calculate percentage based on a 200kW grid capacity (adjust as needed)
-    const gridCapacityKW = 200;
-    const predictedLoadPercent = (predictedLoadKW / gridCapacityKW) * 100;
-    
-    console.log('- Predicted load percent:', predictedLoadPercent);
-
-    // Update ML PREDICTION CARD (not Active Sessions card)
-    console.log('Looking for element: ml-predicted-load');
-    const predictedLoadEl = el('ml-predicted-load');
-    console.log('Element found:', predictedLoadEl);
-    
-    if (predictedLoadEl) {
-        if (!isNaN(predictedLoadPercent)) {
-            const percent = ((data.predicted_load_watts || 0) / 1000 / 200 * 100).toFixed(1);
-            const newText = percent + '%';
-            console.log(`Setting ml-predicted-load text to: "${newText}"`);
-            predictedLoadEl.textContent = newText;
-            console.log(`Updated ML prediction load to: ${percent}%`);
-        } else {
-            console.error('Invalid predicted load percentage:', predictedLoadPercent);
-        }
-    } else {
-        console.error('ml-predicted-load element not found in DOM');
-    }
-
-    // Update ML PREDICTION CARD kW
-    console.log('Looking for element: ml-predicted-load-kw');
-    const predictedLoadKWEl = el('ml-predicted-load-kw');
-    console.log('Element found:', predictedLoadKWEl);
-    
-    if (predictedLoadKWEl) {
-        if (!isNaN(predictedLoadKW)) {
-            const kw = ((data.predicted_load_watts || 0) / 1000).toFixed(1);
-            const newText = kw + ' kW forecasted next 15 min';
-            console.log(`Setting ml-predicted-load-kw text to: "${newText}"`);
-            predictedLoadKWEl.textContent = newText;
-            console.log(`Updated ML prediction kW to: ${kw} kW`);
-        } else {
-            console.error('Invalid predicted load kW:', predictedLoadKW);
-        }
-    } else {
-        console.error('ml-predicted-load-kw element not found in DOM');
-    }
-
-    // Update confidence (use model_used as confidence indicator)
-    const confidenceEl = el('ml-confidence');
-    if (confidenceEl) {
-        const confidence = data.model_used === 'ML' ? '94.2' : '85.0'; // Simulated confidence
-        console.log(`Setting confidence to: ${confidence}%`);
-        confidenceEl.textContent = confidence + '%';
-    }
-
-    // Update status tag
-    const statusTagEl = el('ml-status-tag');
-    if (statusTagEl) {
-        const status = predictedLoadPercent >= 45 ? 'ELEVATED' : 'NOMINAL';
-        console.log(`Setting status to: ${status}`);
-        statusTagEl.textContent = status;
-        
-        if (predictedLoadPercent >= 45) {
-            statusTagEl.style.background = 'rgba(255,165,0,0.15)';
-            statusTagEl.style.color = '#FFA500';
-            statusTagEl.style.border = '1px solid rgba(255,165,0,0.3)';
-        } else {
-            statusTagEl.style.background = 'rgba(166,255,0,0.15)';
-            statusTagEl.style.color = '#a6ff00';
-            statusTagEl.style.border = '1px solid rgba(166,255,0,0.3)';
-        }
-    }
-    
-    console.log('=== updatePredictionUI completed ===');
-}
-
-function startMLPredictionUpdates() {
-    console.log('Starting ML prediction updates...');
-    
-    // Immediate test call
-    fetchMLPrediction().then(data => {
-        console.log('Initial ML prediction fetch result:', data);
-        if (data) {
-            console.log('Updating UI with initial data...');
-            updatePredictionUI(data);
-        } else {
-            console.error('No data received from initial ML prediction fetch');
-        }
-    }).catch(error => {
-        console.error('Error in initial ML prediction fetch:', error);
-    });
-
-    // Update every 15 seconds
-    setInterval(() => {
-        console.log('Fetching ML prediction update...');
-        fetchMLPrediction().then(data => {
-            console.log('Periodic ML prediction fetch result:', data);
-            if (data) {
-                console.log('Updating UI with periodic data...');
-                updatePredictionUI(data);
-            } else {
-                console.error('No data received from periodic ML prediction fetch');
-            }
-        }).catch(error => {
-            console.error('Error in periodic ML prediction fetch:', error);
-        });
-    }, 15000);
-}
-
-// =============================================================
 // INIT
 // =============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('=== DASHBOARD.JS LOADING ===');
-    
     try {
-        initQueueSyncChannel();
-        initQueueSyncListeners();
         const session = await initSession();
         if (!session) return;
         
@@ -1420,197 +1272,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         initStationMap();
         initPrebook();
         initMyBookings();
-        initBookingMap();
-        if (typeof initSidebar === 'function') initSidebar();
+        initSidebar();
         startNotificationEngine();
-        startMLPredictionUpdates();
-        
-        // IMMEDIATE TEST: Force update ML prediction after 2 seconds
-        setTimeout(async () => {
-            console.log('=== IMMEDIATE ML TEST ===');
-            const data = await fetchMLPrediction();
-            console.log('Immediate test data:', data);
-            if (data) {
-                updatePredictionUI(data);
-            }
-        }, 2000);
 
-        const logoutBtn = el('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await supabaseClient.auth.signOut();
-                showToast('Signed out', 'info');
-                setTimeout(() => { window.location.href = 'login.html'; }, 500);
-            });
-        }
-        
-        console.log('=== DASHBOARD.JS INITIALIZED ===');
+        el('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await supabaseClient.auth.signOut();
+            showToast('Signed out', 'info');
+            setTimeout(() => { window.location.href = 'login.html'; }, 500);
+        });
     } catch (err) {
         console.error('Dashboard init error:', err);
     }
 });
 
 function initSidebar() {
-    const links = document.querySelectorAll('.gp-sidebar__nav-item');
+    const links = document.querySelectorAll('aside nav a');
     const currentPath = window.location.pathname.split('/').pop() || 'user-dashboard.html';
     
     links.forEach(link => {
         const href = link.getAttribute('href');
-        const page = link.getAttribute('data-page');
-        const shouldBeActive = (href === currentPath || (page && currentPath.includes(page)));
+        // Handle cases where Dashboard encapsulates several sub-pages
+        const isDashboardSubpage = ['charge-now.html', 'prebook.html', 'station-map.html'].includes(currentPath);
+        const shouldBeActive = (href === currentPath) || (href === 'user-dashboard.html' && isDashboardSubpage);
 
         if (shouldBeActive) {
-            link.classList.add('active');
+            link.classList.add('nav-link-active');
+            link.classList.remove('text-on-surface-variant/60', 'border-transparent');
         } else {
-            link.classList.remove('active');
+            link.classList.remove('nav-link-active');
+            link.classList.add('text-on-surface-variant/60', 'border-transparent');
         }
     });
-}
-
-// =============================================================
-// BOOKING MAP - Show booking location and route
-// =============================================================
-
-let bookingMap = null;
-let bookingMapMarkers = [];
-
-function initBookingMap() {
-    const mapContainer = el('booking-map');
-    if (!mapContainer) return;
-
-    const loadingOverlay = el('booking-map-loading');
-    const refreshBtn = el('refresh-map-btn');
-
-    // Check if Google Maps API is loaded
-    if (typeof google === 'undefined' || !google.maps) {
-        console.error('Booking Map: Google Maps API not available');
-        if (loadingOverlay) {
-            loadingOverlay.innerHTML = `
-                <div class="text-center">
-                    <span class="material-symbols-outlined text-4xl text-red-400 mb-2 block">error</span>
-                    <p class="font-mono text-xs text-red-400 tracking-widest text-center px-4">Google Maps failed to load</p>
-                </div>
-            `;
-        }
-        return;
-    }
-
-    if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-
-    // Get user location
-    navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-            const userLat = pos.coords.latitude;
-            const userLng = pos.coords.longitude;
-
-            // Initialize map
-            if (!bookingMap) {
-                bookingMap = new google.maps.Map(mapContainer, {
-                    center: { lat: userLat, lng: userLng },
-                    zoom: 13,
-                    styles: [
-                        { elementType: "geometry", stylers: [{ color: "#212121" }] },
-                        { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-                        { featureType: "road", elementType: "geometry", stylers: [{ color: "#303030" }] },
-                        { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
-                    ],
-                    disableDefaultUI: true
-                });
-            }
-
-            // Clear existing markers
-            bookingMapMarkers.forEach(m => m.setMap(null));
-            bookingMapMarkers = [];
-
-            // Add user marker
-            const userMarker = new google.maps.Marker({
-                position: { lat: userLat, lng: userLng },
-                map: bookingMap,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    fillColor: "#3b82f6",
-                    fillOpacity: 1,
-                    strokeColor: "#ffffff",
-                    strokeWeight: 2,
-                    scale: 8
-                },
-                title: "Your Location"
-            });
-            bookingMapMarkers.push(userMarker);
-
-            // Get active bookings
-            let q = [];
-            try { q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]'); } catch(e){}
-            const uid = currentSession?.user?.id || 'demo';
-            const myActive = q.filter(item => item.user_id === uid || (item.user_id === 'demo' && uid === 'demo'));
-
-            // Get upcoming bookings
-            const upcoming = JSON.parse(localStorage.getItem('gridpulz_upcoming') || '[]');
-
-            // Combine all bookings
-            const allBookings = [...myActive, ...upcoming];
-
-            if (allBookings.length > 0) {
-                // Add station markers and routes for each booking
-                const bounds = new google.maps.LatLngBounds();
-                bounds.extend({ lat: userLat, lng: userLng });
-
-                allBookings.forEach((booking, index) => {
-                    const stationLat = booking.lat || booking.latitude;
-                    const stationLng = booking.lng || booking.longitude;
-                    const stationName = booking.station_name || 'Station';
-
-                    if (stationLat && stationLng) {
-                        // Station marker
-                        const stationMarker = new google.maps.Marker({
-                            position: { lat: stationLat, lng: stationLng },
-                            map: bookingMap,
-                            icon: {
-                                path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
-                                fillColor: index === 0 ? "#BFFF00" : "#f59e0b",
-                                fillOpacity: 0.8,
-                                strokeColor: "#000",
-                                strokeWeight: 1,
-                                scale: 1.5,
-                                anchor: new google.maps.Point(12, 24)
-                            },
-                            title: stationName
-                        });
-                        bookingMapMarkers.push(stationMarker);
-
-                        // Route line
-                        const route = new google.maps.Polyline({
-                            path: [{ lat: userLat, lng: userLng }, { lat: stationLat, lng: stationLng }],
-                            geodesic: true,
-                            strokeColor: index === 0 ? "#BFFF00" : "#f59e0b",
-                            strokeOpacity: 0.6,
-                            strokeWeight: 3,
-                            map: bookingMap
-                        });
-                        bookingMapMarkers.push(route);
-
-                        bounds.extend({ lat: stationLat, lng: stationLng });
-                    }
-                });
-
-                bookingMap.fitBounds(bounds);
-            }
-
-            if (loadingOverlay) loadingOverlay.classList.add('hidden');
-        },
-        (error) => {
-            console.error('Geolocation error:', error);
-            if (loadingOverlay) {
-                loadingOverlay.innerHTML = '<div class="font-mono text-xs text-red-400 tracking-widest text-center px-4">Unable to get location</div>';
-            }
-        }
-    );
-
-    // Refresh button handler
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-            initBookingMap();
-        });
-    }
 }

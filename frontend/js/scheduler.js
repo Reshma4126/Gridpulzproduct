@@ -3,75 +3,19 @@
 // Ported from Priority Scheduler Simulator
 // ============================================================
 
-let STATIONS = [];
-let stationsLoaded = false;
+const STATIONS = [
+    { name: 'Station Alpha', slots: 2, maxSlots: 2, gridLoad: 42, dist: 0.4 },
+    { name: 'Station Beta', slots: 1, maxSlots: 3, gridLoad: 81, dist: 1.2 },
+    { name: 'Station Gamma', slots: 3, maxSlots: 3, gridLoad: 28, dist: 2.1 }
+];
 
 let vehicles = [];
 let allocCount = 0;
 let arrivalTime = Date.now();
 let isAllocating = false;
-let realtimeUpdateInterval = null;
-let lastQueueRank = {}; // Track previous ranks for animation triggers
 
 // --- Helpers ---
 function el(id) { return document.getElementById(id); }
-
-// --- Load Stations from Supabase ---
-async function loadStationsFromSupabase() {
-    if (!window.supabaseClient) {
-        console.error('Supabase client not available, using fallback stations');
-        // Fallback to simulated data if Supabase is not available
-        STATIONS = [
-            { name: 'Station Alpha', slots: 2, maxSlots: 2, gridLoad: 42, dist: 0.4 },
-            { name: 'Station Beta', slots: 1, maxSlots: 3, gridLoad: 81, dist: 1.2 },
-            { name: 'Station Gamma', slots: 3, maxSlots: 3, gridLoad: 28, dist: 2.1 }
-        ];
-        stationsLoaded = true;
-        return;
-    }
-
-    try {
-        const { data: stations, error } = await window.supabaseClient
-            .from('stations')
-            .select('*');
-
-        if (error) throw error;
-
-        if (stations && stations.length > 0) {
-            // Map Supabase station data to scheduler format
-            STATIONS = stations.map(station => ({
-                id: station.id,
-                name: station.name || station.station_name || `Station ${station.id}`,
-                slots: station.available_slots || station.slots || 2,
-                maxSlots: station.total_slots || station.max_slots || 3,
-                gridLoad: station.grid_load || station.load_percentage || 50,
-                dist: station.distance || 1.0,
-                lat: station.latitude,
-                lng: station.longitude,
-                scoring_level: station.scoring_level || station.priority || 50
-            }));
-            console.log(`✓ Loaded ${STATIONS.length} stations from Supabase`);
-        } else {
-            // Fallback if no stations in Supabase
-            console.warn('No stations found in Supabase, using fallback data');
-            STATIONS = [
-                { name: 'Station Alpha', slots: 2, maxSlots: 2, gridLoad: 42, dist: 0.4 },
-                { name: 'Station Beta', slots: 1, maxSlots: 3, gridLoad: 81, dist: 1.2 },
-                { name: 'Station Gamma', slots: 3, maxSlots: 3, gridLoad: 28, dist: 2.1 }
-            ];
-        }
-        stationsLoaded = true;
-    } catch (err) {
-        console.error('Error loading stations from Supabase:', err);
-        // Fallback to simulated data
-        STATIONS = [
-            { name: 'Station Alpha', slots: 2, maxSlots: 2, gridLoad: 42, dist: 0.4 },
-            { name: 'Station Beta', slots: 1, maxSlots: 3, gridLoad: 81, dist: 1.2 },
-            { name: 'Station Gamma', slots: 3, maxSlots: 3, gridLoad: 28, dist: 2.1 }
-        ];
-        stationsLoaded = true;
-    }
-}
 
 function getGridClass(gridLoad) {
     if (gridLoad > 75) return 'bg-red-500';
@@ -104,131 +48,6 @@ function avatarColor(name) {
     return colors[Math.abs(hash) % colors.length];
 }
 
-// --- Real-time Update Functions ---
-function updateVehicleWaitTimes() {
-    vehicles.forEach(v => {
-        v.waitMins = Math.round((Date.now() - arrivalTime) / 60000);
-    });
-}
-
-function isQueueOrderChanged(sorted) {
-    let changed = false;
-    sorted.forEach((v, newRank) => {
-        const prevRank = lastQueueRank[v.id];
-        if (prevRank !== undefined && prevRank !== newRank && getTemporalState(v) !== 'upcoming') {
-            changed = true;
-        }
-        lastQueueRank[v.id] = newRank;
-    });
-    return changed;
-}
-
-function startRealtimeUpdates() {
-    if (realtimeUpdateInterval) clearInterval(realtimeUpdateInterval);
-    
-    realtimeUpdateInterval = setInterval(() => {
-        if (vehicles.length === 0 || isAllocating) return;
-
-        // Update wait times
-        updateVehicleWaitTimes();
-
-        // Re-sort queue
-        const sorted = [...vehicles].sort((a, b) => calcScore(b) - calcScore(a));
-        
-        // Check if order changed for animation
-        const orderChanged = isQueueOrderChanged(sorted);
-
-        // Update metrics with animation
-        updateMetricsWithAnimation();
-
-        // Re-render queue with animations for changed items
-        renderQueueWithRealtimeEffects(sorted, orderChanged);
-
-        // Update algo trace
-        if (vehicles.length > 0) {
-            updateAlgoTrace(1);
-        }
-    }, 1000); // Update every second
-}
-
-function stopRealtimeUpdates() {
-    if (realtimeUpdateInterval) {
-        clearInterval(realtimeUpdateInterval);
-        realtimeUpdateInterval = null;
-    }
-}
-
-function updateMetricsWithAnimation() {
-    const metricsToUpdate = [
-        { el: el('m-users'), value: vehicles.length },
-        { el: el('m-slots'), value: STATIONS.reduce((sum, st) => sum + st.slots, 0) },
-        { el: el('m-alloc'), value: allocCount }
-    ];
-
-    metricsToUpdate.forEach(({ el: element, value }) => {
-        if (element && element.textContent !== String(value)) {
-            element.classList.add('metric-pulse');
-            element.textContent = value;
-            setTimeout(() => element.classList.remove('metric-pulse'), 800);
-        }
-    });
-}
-
-function renderQueueWithRealtimeEffects(sorted, orderChanged) {
-    const list = el('queue-list');
-
-    if (sorted.length === 0) {
-        list.innerHTML = `
-            <div class="text-center py-10">
-                <span class="material-symbols-outlined text-3xl text-white/5 mb-2 block">format_list_bulleted</span>
-                <div class="text-[10px] uppercase tracking-widest text-on-surface-variant/40">Queue is empty</div>
-            </div>`;
-        return;
-    }
-
-    const newHTML = sorted.map((v, rank) => {
-        const score = calcScore(v);
-        const tState = getTemporalState(v);
-        const dimClass = tState === 'upcoming' ? 'opacity-40' : '';
-        
-        // Add animation class if rank changed
-        const prevRank = lastQueueRank[v.id];
-        const rankChanged = orderChanged && prevRank !== undefined && prevRank !== rank && tState !== 'upcoming';
-        const animClass = rankChanged ? 'rank-changed' : '';
-        
-        // Highlight urgent low-battery vehicles
-        const urgentClass = v.battery < 25 && score > 50 ? 'live-priority-boost' : '';
-
-        const [bg, fg, border] = avatarColor(v.name);
-        const initials = v.name.slice(0, 2).toUpperCase();
-        const badge = getTemporalBadge(v);
-        const bookedInfo = v.booked_time ? `<span class="text-neon/50"> • Booked ${new Date(v.booked_time).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>` : '';
-        
-        const scoreUpdateClass = 'score-live score-badge updating';
-        const waitTimerClass = 'wait-timer ticking';
-        const batteryClass = v.battery < 25 ? 'battery-critical' : '';
-
-        return `
-            <div class="queue-item ${animClass} ${urgentClass} ${dimClass} bg-white/[0.03] border border-white/5 p-3 rounded-lg flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full border flex items-center justify-center font-bold text-xs ${bg} ${fg} ${border}">
-                    ${initials}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-bold text-xs text-white truncate flex items-center gap-2 ${batteryClass}">${v.name} ${badge}</div>
-                    <div class="text-[9px] text-on-surface-variant/50 uppercase tracking-widest truncate mt-0.5">
-                        <span class="${v.battery < 30 ? 'text-red-400' : 'text-white/70'}">${v.battery}% SoC</span> • Wait <span class="${waitTimerClass}">${v.waitMins}m</span> • Target: ${STATIONS[v.stationIdx].name}${bookedInfo}
-                    </div>
-                </div>
-                <div class="text-right pl-2 border-l border-white/5">
-                    <div class="bg-white/10 text-white font-mono font-bold text-xs px-2 py-0.5 rounded pill inline-block ${scoreUpdateClass}">${score}</div>
-                    <div class="text-[8px] uppercase tracking-widest text-on-surface-variant/40 mt-1">${tState === 'upcoming' ? 'Passive' : 'Rank #' + (rank + 1)}</div>
-                </div>
-            </div>`;
-    }).join('');
-
-    list.innerHTML = newHTML;
-}
-
 // --- Domain Logic ---
 const BUFFER_WINDOW_MINS = 15;
 
@@ -243,15 +62,10 @@ function getTemporalState(v) {
 }
 
 function calcScore(v) {
-    const station = STATIONS[v.stationIdx];
     const batteryScore = (100 - v.battery) * 0.60;
     const waitScore    = v.waitMins * 0.30;
-    const gridPenalty  = station.gridLoad * 0.10;
-    
-    // Use scoring_level from Supabase if available, otherwise use grid load
-    const scoringBonus = (station.scoring_level || 50) * 0.05;
-    
-    let baseScore = batteryScore + waitScore - gridPenalty + scoringBonus;
+    const gridPenalty  = STATIONS[v.stationIdx].gridLoad * 0.10;
+    let baseScore = batteryScore + waitScore - gridPenalty;
 
     // Temporal Weight Factor (Wt)
     const state = getTemporalState(v);
@@ -278,9 +92,8 @@ function findBestRedirect(excludeIdx) {
         if (i === excludeIdx && s.slots === 0) return;
         if (s.gridLoad > 85) return; // Never redirect to critically overloaded station
 
-        // Find best station combining slot availability, low grid load, and scoring_level
-        const scoringBonus = (s.scoring_level || 50) * 0.3; // Higher scoring_level = better station
-        const score = (s.slots > 0 ? 50 : 0) + (85 - s.gridLoad) * 0.5 - (s.dist * 5) + scoringBonus;
+        // Find best station combining slot availability and low grid load
+        const score = (s.slots > 0 ? 50 : 0) + (85 - s.gridLoad) * 0.5 - (s.dist * 5);
         if (score > bestScore && (i !== excludeIdx || s.slots > 0)) {
             bestScore = score;
             best = i;
@@ -290,6 +103,13 @@ function findBestRedirect(excludeIdx) {
 }
 
 // --- DOM Rendering ---
+function renderStationsOptions() {
+    const select = el('v-station');
+    select.innerHTML = STATIONS.map((s, i) =>
+        `<option value="${i}" class="bg-[#131318] text-white">Target: ${s.name} — ${s.dist} km</option>`
+    ).join('');
+}
+
 function updateMetrics() {
     el('m-users').textContent = vehicles.length;
     el('m-slots').textContent = STATIONS.reduce((sum, st) => sum + st.slots, 0);
@@ -309,7 +129,7 @@ function updateAlgoTrace(step) {
 function renderStations() {
     const list = el('stations-list');
     list.innerHTML = STATIONS.map((s, i) => `
-        <div class="bg-white/[0.03] border border-white/5 p-4 rounded-lg" data-station-idx="${i}">
+        <div class="bg-white/[0.03] border border-white/5 p-4 rounded-lg">
             <div class="flex justify-between items-center mb-3">
                 <div class="font-headline font-bold text-sm text-white">${s.name}</div>
                 ${getBadge(s.gridLoad)}
@@ -326,12 +146,7 @@ function renderStations() {
                     <div class="bar-wrap">
                         <div class="bar ${getGridClass(s.gridLoad)}" style="width: ${s.gridLoad}%"></div>
                     </div>
-                    <span class="font-mono font-bold text-white text-[10px] w-8 text-right">${s.gridLoad.toFixed(0)}%</span>
-                </div>
-                
-                <div class="flex justify-between items-center">
-                    <span class="text-on-surface-variant/50 uppercase tracking-widest text-[9px]">Scoring Level</span>
-                    <span class="font-mono text-neon text-[10px]">${s.scoring_level || 50}</span>
+                    <span class="font-mono font-bold text-white text-[10px] w-8 text-right">${s.gridLoad}%</span>
                 </div>
                 
                 <div class="flex justify-between items-center">
@@ -404,6 +219,38 @@ function renderQueue(sorted, highlights = null) {
 }
 
 // --- User Actions ---
+function handleAddVehicle() {
+    const nameInput = el('v-name').value.trim();
+    const name = nameInput || `Driver-${Math.floor(Math.random() * 1000)}`;
+    const battery = +el('v-bat').value;
+    const stationIdx = +el('v-station').value;
+
+    // Simulate wait time (older vehicles waited longer)
+    const waitMins = Math.round((Date.now() - arrivalTime) / 60000 + (Math.random() * 5));
+
+    const v = { id: Date.now() + Math.random(), name, battery, stationIdx, waitMins };
+
+    // Optional pre-book time
+    const prebookInput = el('v-prebook');
+    if (prebookInput && prebookInput.value) {
+        v.booked_time = new Date(prebookInput.value).toISOString();
+    }
+
+    vehicles.push(v);
+
+    // Reset form
+    el('v-name').value = '';
+    el('v-bat').value = 35;
+    el('bat-out').textContent = '35%';
+    if (prebookInput) prebookInput.value = '';
+
+    updateMetrics();
+    const sorted = [...vehicles].sort((a, b) => calcScore(b) - calcScore(a));
+    renderQueue(sorted);
+
+    updateAlgoTrace(1); // Highlight Step 1
+}
+
 function handleRunAllocation() {
     if (vehicles.length === 0 || isAllocating) {
         return;
@@ -411,14 +258,11 @@ function handleRunAllocation() {
     
     isAllocating = true;
 
-    // Pause real-time updates during allocation
-    stopRealtimeUpdates();
-
     const sorted = [...vehicles].sort((a, b) => calcScore(b) - calcScore(a));
     const log = el('decision-log');
 
     updateAlgoTrace(3); // Sorting step
-    renderQueueWithRealtimeEffects(sorted);
+    renderQueue(sorted);
 
     // Simulate delay for trace visualization
     setTimeout(() => {
@@ -474,14 +318,6 @@ function handleRunAllocation() {
         });
 
         updateAlgoTrace(8); // Final step (updated for new trace)
-        
-        // Render stations with animation
-        const stationElems = document.querySelectorAll('[data-station-idx]');
-        stationElems.forEach(el => el.classList.add('station-updating'));
-        setTimeout(() => {
-            stationElems.forEach(el => el.classList.remove('station-updating'));
-        }, 1000);
-        
         renderStations();
         updateMetrics();
 
@@ -491,26 +327,26 @@ function handleRunAllocation() {
             if (d.type === 'assigned' || d.type === 'assigned-jit') {
                 const jitNote = d.type === 'assigned-jit' ? ' <span class="text-neon">⚡ JIT Activated</span>' : '';
                 html += `
-                    <div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg mb-2 animate-fadeIn">
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg mb-2">
                         <div class="text-xs font-bold text-emerald-400 flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">check_circle</span> Slot Confirmed: ${STATIONS[d.station].name}${jitNote}</div>
                         <div class="text-[10px] text-emerald-300/70 mt-1">Driver <strong>${d.v.name}</strong> • ${d.score} pts • ${d.v.battery}% SoC</div>
                     </div>`;
             } else if (d.type === 'redirect' || d.type === 'grid-redirect') {
                 const reason = d.type === 'grid-redirect' ? `Grid overload at target` : `Target station full`;
                 html += `
-                    <div class="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg mb-2 animate-fadeIn">
+                    <div class="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-lg mb-2">
                         <div class="text-xs font-bold text-yellow-500 flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">turn_right</span> Redirected: ${STATIONS[d.to].name}</div>
                         <div class="text-[10px] text-yellow-400/70 mt-1">Driver <strong>${d.v.name}</strong> • ${reason}</div>
                     </div>`;
             } else if (d.type === 'passive') {
                 html += `
-                    <div class="bg-white/[0.02] border border-white/5 p-3 rounded-lg mb-2 opacity-50 animate-fadeIn">
+                    <div class="bg-white/[0.02] border border-white/5 p-3 rounded-lg mb-2 opacity-50">
                         <div class="text-xs font-bold text-white/40 flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">schedule</span> Passive (Pre-booked)</div>
                         <div class="text-[10px] text-white/25 mt-1">Driver <strong>${d.v.name}</strong> • Slot not yet in buffer window — skipped</div>
                     </div>`;
             } else {
                 html += `
-                    <div class="bg-white/5 border border-white/10 p-3 rounded-lg mb-2 animate-fadeIn">
+                    <div class="bg-white/5 border border-white/10 p-3 rounded-lg mb-2">
                         <div class="text-xs font-bold text-white/50 flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Queued</div>
                         <div class="text-[10px] text-white/30 mt-1">Driver <strong>${d.v.name}</strong> • All viable stations full</div>
                     </div>`;
@@ -523,7 +359,7 @@ function handleRunAllocation() {
             ...decisions.filter(d => d.type === 'wait').map(d => d.v.id),
             ...passiveIds  // Always keep passive pre-bookings in the queue
         ];
-        renderQueueWithRealtimeEffects(sorted, true);
+        renderQueue(sorted, { losers: decisions.filter(d => d.type === 'wait').map(d => d.v.id) });
 
         // Keep waiting + passive vehicles, remove assigned/redirected
         vehicles = vehicles.filter(v => keepIds.includes(v.id));
@@ -531,24 +367,14 @@ function handleRunAllocation() {
         // Sync back to local storage
         try {
             let q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
-            q = q.map(item => {
-                if (!keepIds.includes(item.id)) {
-                    item.status = 'allocated';
-                }
-                return item;
-            });
+            q = q.filter(item => keepIds.includes(item.id));
             localStorage.setItem('gridpulz_queue', JSON.stringify(q));
         } catch(e) {}
 
         setTimeout(() => {
             updateAlgoTrace(0);
             isAllocating = false;
-
-            // Resume real-time updates if there are still vehicles
-            if (vehicles.length > 0) {
-                startRealtimeUpdates();
-            }
-        }, 2000);
+        }, 4000);
 
     }, 800);
 }
@@ -557,23 +383,11 @@ function handleReset() {
     vehicles = [];
     allocCount = 0;
     arrivalTime = Date.now();
-    lastQueueRank = {};
 
-    // Stop real-time updates
-    stopRealtimeUpdates();
-
-    // Reload stations from Supabase to get fresh data
-    loadStationsFromSupabase().then(() => {
-        // Reset slots and grid load to initial values from Supabase
-        STATIONS.forEach(s => {
-            s.slots = s.maxSlots; // Reset to full capacity
-            // Keep gridLoad as is from Supabase (real-time data)
-        });
-        
-        renderStations();
-        updateMetrics();
-        updateAlgoTrace(0);
-    });
+    // Reset defaults
+    STATIONS[0].slots = 2; STATIONS[0].gridLoad = 42;
+    STATIONS[1].slots = 1; STATIONS[1].gridLoad = 81;
+    STATIONS[2].slots = 3; STATIONS[2].gridLoad = 28;
 
     el('queue-list').innerHTML = `
         <div class="text-center py-10">
@@ -593,47 +407,30 @@ function handleReset() {
 }
 
 // --- Init ---
-document.addEventListener('DOMContentLoaded', async () => {
-    // Load stations from Supabase first
-    await loadStationsFromSupabase();
+document.addEventListener('DOMContentLoaded', () => {
+    // Range slider value
+    const slider = el('v-bat');
+    const out = el('bat-out');
+    slider.addEventListener('input', () => {
+        out.textContent = slider.value + '%';
+        if (slider.value <= 20) {
+            out.className = 'font-mono text-red-500 text-sm font-bold shadow-red-500 drop-shadow-md';
+        } else if (slider.value <= 40) {
+            out.className = 'font-mono text-yellow-500 text-sm font-bold shadow-yellow-500 drop-shadow-md';
+        } else {
+            out.className = 'font-mono text-neon text-sm font-bold shadow-neon drop-shadow-md';
+        }
+    });
 
     // Listeners
+    el('add-btn').addEventListener('click', handleAddVehicle);
     el('run-btn').addEventListener('click', handleRunAllocation);
     el('reset-btn').addEventListener('click', handleReset);
 
     // Initial render
+    renderStationsOptions();
     renderStations();
     updateMetrics();
-
-    // Refresh station data from Supabase periodically (real-time effect)
-    setInterval(async () => {
-        try {
-            if (window.supabaseClient && stationsLoaded) {
-                const { data: stations, error } = await window.supabaseClient
-                    .from('stations')
-                    .select('*');
-
-                if (!error && stations && stations.length > 0) {
-                    // Update STATIONS array with fresh data from Supabase
-                    stations.forEach(station => {
-                        const idx = STATIONS.findIndex(s => s.id === station.id);
-                        if (idx !== -1) {
-                            STATIONS[idx].slots = station.available_slots || station.slots || STATIONS[idx].slots;
-                            STATIONS[idx].gridLoad = station.grid_load || station.load_percentage || STATIONS[idx].gridLoad;
-                            STATIONS[idx].scoring_level = station.scoring_level || station.priority || STATIONS[idx].scoring_level || 50;
-                        }
-                    });
-                    
-                    // Update station display
-                    if (vehicles.length > 0) {
-                        renderStations();
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('Error refreshing station data:', err);
-        }
-    }, 5000); // Refresh every 5 seconds
 
     // Listen to Remote Queue pushes (from Driver Dashboard Mocks)
     window.addEventListener('storage', (e) => {
@@ -641,49 +438,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const externalQueue = JSON.parse(e.newValue);
                 // Sync removals
-                vehicles = vehicles.filter(v => !v.isExternal || externalQueue.find(eq => eq.id === v.id && eq.status !== 'allocated'));
+                vehicles = vehicles.filter(v => !v.isExternal || externalQueue.find(eq => eq.id === v.id));
                 // Sync additions
                 externalQueue.forEach(eq => {
-                    if (!vehicles.find(v => v.id === eq.id) && eq.status !== 'allocated') {
+                    if (!vehicles.find(v => v.id === eq.id)) {
                         eq.waitMins = Math.round((Date.now() - arrivalTime) / 60000) || 0;
                         eq.isExternal = true;
                         vehicles.push(eq);
-                        lastQueueRank[eq.id] = vehicles.length - 1;
                     }
                 });
                 updateMetrics();
                 const sorted = [...vehicles].sort((a, b) => calcScore(b) - calcScore(a));
-                renderQueueWithRealtimeEffects(sorted);
+                renderQueue(sorted);
                 updateAlgoTrace(1); // Highlight Step 1: Incoming Arrival
-                
-                // Start real-time updates if not running
-                if (!realtimeUpdateInterval) {
-                    startRealtimeUpdates();
-                }
-            } catch (err) {}
-        }
-        
-        // Also listen to prebook sync ping for same-page updates
-        if (e.key === 'gridpulz_queue_sync_ping' && e.newValue) {
-            try {
-                const q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
-                if (q.length > 0) {
-                    vehicles = q.map(eq => ({
-                        ...eq,
-                        isExternal: true,
-                        waitMins: eq.waitMins || 0
-                    }));
-                    vehicles.forEach((v, idx) => {
-                        lastQueueRank[v.id] = idx;
-                    });
-                    updateMetrics();
-                    const sorted = [...vehicles].sort((a, b) => calcScore(b) - calcScore(a));
-                    renderQueueWithRealtimeEffects(sorted);
-                    updateAlgoTrace(1);
-                    if (!realtimeUpdateInterval) {
-                        startRealtimeUpdates();
-                    }
-                }
             } catch (err) {}
         }
     });
@@ -693,51 +460,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const initialQueue = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
         if (initialQueue.length > 0) {
             initialQueue.forEach(eq => {
-                if (!vehicles.find(v => v.id === eq.id) && eq.status !== 'allocated') {
-                    eq.waitMins = eq.waitMins || Math.round((Date.now() - arrivalTime) / 60000) || 0;
+                if (!vehicles.find(v => v.id === eq.id)) {
+                    eq.waitMins = Math.round((Date.now() - arrivalTime) / 60000) || 0;
                     eq.isExternal = true;
                     vehicles.push(eq);
-                    lastQueueRank[eq.id] = vehicles.length - 1;
                 }
             });
             updateMetrics();
             const sorted = [...vehicles].sort((a, b) => calcScore(b) - calcScore(a));
-            renderQueueWithRealtimeEffects(sorted);
-            updateAlgoTrace(1);
-            
-            // Start real-time updates
-            startRealtimeUpdates();
-            
-            console.log(`✓ Loaded ${initialQueue.length} pre-booked vehicles from localStorage`);
+            renderQueue(sorted);
         }
-    } catch(e) {
-        console.error('Error loading initial queue:', e);
-    }
-    
-    // Periodically check for updates from localStorage (fallback for same-page updates)
-    setInterval(() => {
-        try {
-            const q = JSON.parse(localStorage.getItem('gridpulz_queue') || '[]');
-            const currentIds = new Set(vehicles.map(v => v.id));
-            
-            // Check for new entries
-            q.forEach(eq => {
-                if (!currentIds.has(eq.id) && eq.status !== 'allocated') {
-                    eq.waitMins = eq.waitMins || 0;
-                    eq.isExternal = true;
-                    vehicles.push(eq);
-                    lastQueueRank[eq.id] = vehicles.length - 1;
-                    
-                    updateMetrics();
-                    const sorted = [...vehicles].sort((a, b) => calcScore(b) - calcScore(a));
-                    renderQueueWithRealtimeEffects(sorted);
-                    updateAlgoTrace(1);
-                    
-                    if (!realtimeUpdateInterval) {
-                        startRealtimeUpdates();
-                    }
-                }
-            });
-        } catch(e) {}
-    }, 2000); // Check every 2 seconds
+    } catch(e) {}
 });

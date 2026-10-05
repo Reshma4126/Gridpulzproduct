@@ -12,152 +12,122 @@ function sanitizeEmail(value) {
         .toLowerCase();
 }
 
-// Backend URL configured in api-config.js
-
 /**
  * Handle Operator Signup Form Submission
  */
 async function handleOperatorSignup(event) {
     event.preventDefault();
 
-    const form = event.target?.closest('form') || document.getElementById('signup-operator');
-    if (!form) {
-        alert('Operator signup form is not available on this page.');
-        return;
-    }
-
-    function readValue(selector) {
-        const field = form.querySelector(selector) || document.querySelector(selector);
-        if (!field) {
-            throw new Error(`Missing required field: ${selector}`);
-        }
-        return String(field.value ?? '');
-    }
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    const originalButtonText = submitButton ? submitButton.innerHTML : '';
-    const email = sanitizeEmail(readValue('#email'));
-    const password = readValue('#password');
-    const name = readValue('#name').trim();
-    const contact = readValue('#contact').trim();
-    const address = readValue('#address').trim();
-    const latitude = parseFloat(readValue('#latitude'));
-    const longitude = parseFloat(readValue('#longitude'));
-    const num_plugs = parseInt(readValue('#num_plugs'), 10);
-    const charging_type = readValue('#charging_type').trim();
-    const connector_type = readValue('#connector_type').trim();
-    const total_capacity_kv = parseFloat(readValue('#total_capacity_kv'));
-    const voltage = parseFloat(readValue('#voltage'));
-    const max_current = parseFloat(readValue('#max_current'));
-    const meter_available = readValue('#meter_available') === 'true';
-    const communication_type = readValue('#communication_type').trim();
-    const operating_hours = readValue('#operating_hours').trim();
-    const avg_usage = parseFloat(readValue('#avg_usage'));
+    const form = event.target;
+    const email = sanitizeEmail(form.querySelector('#email').value);
+    const password = form.querySelector('#password').value;
+    const name = form.querySelector('#name').value.trim();
+    const contact = form.querySelector('#contact').value.trim();
+    const station_email = sanitizeEmail(form.querySelector('#station_email').value);
+    const address = form.querySelector('#address').value.trim();
+    const latitude = parseFloat(form.querySelector('#latitude').value);
+    const longitude = parseFloat(form.querySelector('#longitude').value);
+    const num_plugs = parseInt(form.querySelector('#num_plugs').value, 10);
+    const charging_type = form.querySelector('#charging_type').value.trim();
+    const connector_type = form.querySelector('#connector_type').value.trim();
+    const total_capacity_kv = parseFloat(form.querySelector('#total_capacity_kv').value);
+    const voltage = parseFloat(form.querySelector('#voltage').value);
+    const max_current = parseFloat(form.querySelector('#max_current').value);
+    const meter_available = form.querySelector('#meter_available').value === 'true';
+    const communication_type = form.querySelector('#communication_type').value.trim();
+    const operating_hours = form.querySelector('#operating_hours').value.trim();
+    const avg_usage = parseFloat(form.querySelector('#avg_usage').value);
 
     try {
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.innerHTML = 'Establishing...';
-        }
-
-        // First try sign-in: if account already exists with this password, we continue directly.
-        let { error: signInError } = await supabaseClient.auth.signInWithPassword({
+        const { error: authError } = await supabaseClient.auth.signUp({
             email,
             password,
+            options: {
+                data: {
+                    role: 'operator'
+                }
+            }
+        });
+
+        if (authError) {
+            console.error('Auth signup error:', authError);
+            alert('Signup failed: ' + authError.message);
+            return;
+        }
+
+        // Ensure we have an authenticated session before inserting into RLS-protected tables.
+        const { error: signInError } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
         });
 
         if (signInError) {
-            // No valid session yet; try creating account.
-            const { error: authError } = await supabaseClient.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: { role: 'operator' }
-                }
-            });
-
-            if (authError) {
-                const authMessage = String(authError.message || '');
-                const alreadyRegistered = authMessage.toLowerCase().includes('already registered');
-
-                if (alreadyRegistered) {
-                    alert('This operator email already exists. Use the existing password to establish/update the node.');
-                    return;
-                }
-
-                console.error('Auth signup error:', authError);
-                alert('Signup failed: ' + authMessage);
-                return;
-            }
-
-            // New account created, now authenticate to continue station setup.
-            ({ error: signInError } = await supabaseClient.auth.signInWithPassword({
-                email,
-                password,
-            }));
-
-            if (signInError) {
-                console.error('Post-signup signin error:', signInError);
-                alert('Account created, but login is required before station setup. ' + signInError.message);
-                return;
-            }
+            console.error('Post-signup signin error:', signInError);
+            alert('Account created, but login is required before station setup. ' + signInError.message);
+            return;
         }
 
-        const stationPayload = {
-            email,
+        // Try supported capacity column names across schema variants.
+        const basePayload = {
             name,
             contact,
+            email: station_email,
             address,
             latitude,
             longitude,
             num_plugs,
             charging_type,
             connector_type,
-            total_capacity_kw: total_capacity_kv,
             voltage,
             max_current,
             meter_available,
-            communication_type,
             operating_hours,
             avg_usage
         };
 
-        const response = await fetch(`${BACKEND_BASE_URL}/api/register-station`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(stationPayload)
-        });
+        const payloads = [
+            { ...basePayload, total_capacity_kv: total_capacity_kv, communication_t: communication_type },
+            { ...basePayload, total_capacity_kw: total_capacity_kv, communication_t: communication_type },
+            { ...basePayload, power_capacity_kw: total_capacity_kv, communication_t: communication_type },
+            { ...basePayload, total_capacity_kv: total_capacity_kv, communication_type: communication_type },
+            { ...basePayload, total_capacity_kw: total_capacity_kv, communication_type: communication_type },
+            { ...basePayload, power_capacity_kw: total_capacity_kv, communication_type: communication_type },
+            { ...basePayload }
+        ];
 
-        if (!response.ok) {
-            const errorBody = await response.json().catch(() => ({}));
-            const message = errorBody.detail || `HTTP ${response.status}`;
-            console.error('Station registration error:', message);
-            if (response.status === 500 && String(message).toLowerCase().includes('supabase_service_role_key')) {
-                alert('Station registration needs SUPABASE_SERVICE_ROLE_KEY on the backend, or a Supabase INSERT policy for stations.');
+        let dbError = null;
+        for (const payload of payloads) {
+            const { error } = await supabaseClient.from('stations').insert([payload]);
+            if (!error) {
+                dbError = null;
+                break;
+            }
+
+            // Ignore only missing-column errors and try next payload variant.
+            if (error.code === 'PGRST204') {
+                dbError = error;
+                continue;
+            }
+
+            dbError = error;
+            break;
+        }
+
+        if (dbError) {
+            console.error('Database insert error:', dbError);
+            if (dbError.code === '42501') {
+                alert('Station registration failed due database policy (RLS). Allow authenticated INSERT on stations in Supabase policies.');
                 return;
             }
-            alert('Station registration failed: ' + message);
+            alert('Station registration failed: ' + dbError.message);
             return;
         }
 
-            localStorage.setItem('gridpulz_operator_email', email);
-        alert('Station registered successfully! Redirecting to your station dashboard.');
-        window.location.href = 'dashboard.html';
+        alert('Station registered successfully!');
+        window.location.href = 'login.html';
     } catch (error) {
         console.error('Operator signup error:', error);
-        const errMsg = String(error?.message || 'Unknown error');
-        if (errMsg.toLowerCase().includes('failed to fetch')) {
-            alert('Registration error: Backend is unreachable. Please check your connection and try again.');
-        } else {
-            alert('Registration error: ' + errMsg);
-        }
-    } finally {
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalButtonText || 'Establish Node';
-        }
+        alert('Registration error: ' + error.message);
     }
 }
 
@@ -176,18 +146,9 @@ async function handleLogin(event) {
 
         if (error) throw error;
 
-        const userRole = data.user.user_metadata?.role;
-        const selectedRole = window.currentRole; // 'operator' or 'user'
+        const role = data.user.user_metadata?.role || window.currentRole;
 
-        if (userRole && userRole !== selectedRole) {
-            await supabaseClient.auth.signOut();
-            throw new Error(`Account mismatch: This is a ${userRole} account. Please use the correct tab to login.`);
-        }
-
-        const sessionEmail = sanitizeEmail(data.user?.email || email);
-
-        if (selectedRole === 'operator') {
-            localStorage.setItem('gridpulz_operator_email', sessionEmail);
+        if (role === 'operator') {
             console.log('Operator detected. Routing to Command Center.');
             window.location.href = 'dashboard.html';
         } else {
@@ -214,7 +175,7 @@ async function handleUserSignup(event) {
     const chargingPreferences = document.getElementById('chargingPreferences').value.trim() || null;
 
     try {
-        const { error: authError } = await supabaseClient.auth.signUp({
+        const { data: authData, error: authError } = await supabaseClient.auth.signUp({
             email,
             password,
             options: {
@@ -234,7 +195,7 @@ async function handleUserSignup(event) {
             return;
         }
 
-        // Sign in immediately to create an authenticated session for the profile insert.
+        // Sign in immediately to get an authenticated session for RLS-protected insert.
         const { error: signInError } = await supabaseClient.auth.signInWithPassword({
             email,
             password

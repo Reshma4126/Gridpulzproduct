@@ -5,9 +5,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>GRIDPULZ | Authentication Gateway</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Michroma&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script>
         tailwind.config = {
@@ -31,31 +29,15 @@
                         "primary-container": "#b8f600",
                     },
                     fontFamily: {
-                        "headline": ["Michroma", "sans-serif"],
-                        "body": ["Josefin Sans", "sans-serif"],
-                        "mono": ["Michroma", "sans-serif"]
+                        "headline": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
                     }
                 }
             }
         }
     </script>
     <style>
-        body {
-            font-family: 'Josefin Sans', sans-serif;
-            background-color: #0A0A0F;
-            color: #e4e1e9;
-        }
-        .font-headline, .font-michroma, h1, h2, h3, h4, h5, h6 {
-            font-family: 'Michroma', sans-serif !important;
-        }
-        html, body {
-            min-height: 100%;
-            overflow-x: hidden;
-            overflow-y: scroll;
-        }
-        body {
-            -webkit-overflow-scrolling: touch;
-        }
         .glass-panel {
             background: rgba(31, 31, 37, 0.6);
             backdrop-filter: blur(20px);
@@ -84,11 +66,11 @@
         }
     </style>
 </head>
-<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen py-6 py-10 flex items-start items-center justify-center relative min-w-[1440px] overflow-x-auto">
+<body class="bg-[#0A0A0F] text-on-surface font-body min-h-screen flex items-center justify-center relative overflow-hidden">
     <div class="dot-grid absolute inset-0 opacity-40 z-0"></div>
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#BFFF00] opacity-[0.03] blur-[150px] rounded-full pointer-events-none z-0"></div>
 
-    <div class="glass-panel w-full max-w-md p-6 p-10 my-8 rounded-2xl border border-outline/20 relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade">
+    <div class="glass-panel w-full max-w-md p-10 rounded-2xl border border-outline/20 relative z-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade">
         <div class="flex justify-center mb-8">
             <a href="index.html" class="hover:opacity-80 transition-opacity">
                 <img src="assets/gridpulz_logo.png" alt="GridPulz" class="h-32 mix-blend-lighten">
@@ -120,21 +102,24 @@
             </div>
         </form>
 
+
+
         <div class="mt-6 pt-6 border-t border-outline/20">
             <div class="text-center font-body uppercase tracking-widest text-[10px] text-on-surface-variant mb-4">NEW DETECTED IDENTITIES</div>
             <div class="flex flex-col gap-3">
                 <a href="signup-operator.html" class="w-full border border-[#BFFF00]/30 text-[#BFFF00] font-headline font-bold uppercase tracking-widest text-[10px] py-4 rounded text-center hover:bg-[#BFFF00]/10 transition-colors">Register Station Node</a>
-                <a href="signup-user.html" class="w-full border border-white/10 text-white font-headline font-bold uppercase tracking-widest text-[10px] py-4 rounded text-center hover:bg-white/5 transition-colors">Sign Up as EV Driver</a>
+                <a href="signup-user.html" class="w-full border border-[#BFFF00]/30 text-[#BFFF00] font-headline font-bold uppercase tracking-widest text-[10px] py-4 rounded text-center hover:bg-[#BFFF00]/10 transition-colors flex items-center justify-center gap-2"><span class="material-symbols-outlined text-sm">electric_car</span> Register as EV Driver</a>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
-    <script src="js/api-config.js"></script>
     <script src="js/auth.js"></script>
     <script>
         window.currentRole = 'operator';
+
+
 
         window.switchRole = function(role) {
             window.currentRole = role;
@@ -155,5 +140,3 @@
     </script>
 </body>
 </html>
-
-

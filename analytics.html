@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <script>
+        if (sessionStorage.getItem('isAuthenticated') !== 'true' || sessionStorage.getItem('userRole') !== 'operator') {
+            window.location.href = 'login.html';
+        }
+    </script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>GridPulz Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Michroma&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-fixed-dim": "#ffb3ad",
+                        "background": "#131313",
+                        "on-primary": "#283500",
+                        "outline": "#8e9379",
+                        "on-tertiary-container": "#c71623",
+                        "inverse-primary": "#506600",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#c4c9ac",
+                        "surface-tint": "#abd600",
+                        "error-container": "#93000a",
+                        "outline-variant": "#444933",
+                        "surface-container-highest": "#353535",
+                        "primary-container": "#c3f400",
+                        "secondary-fixed": "#ffdea8",
+                        "surface-container": "#1f1f1f",
+                        "primary-fixed": "#c3f400",
+                        "surface-container-low": "#1b1b1b",
+                        "on-tertiary": "#680009",
+                        "on-error": "#690005",
+                        "tertiary": "#ffffff",
+                        "secondary": "#ffdb9d",
+                        "primary-fixed-dim": "#abd600",
+                        "surface": "#131313",
+                        "on-tertiary-fixed": "#410004",
+                        "inverse-surface": "#e2e2e2",
+                        "secondary-container": "#feb700",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-container": "#556d00",
+                        "on-secondary-container": "#6b4b00",
+                        "surface-container-high": "#2a2a2a",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "tertiary-container": "#ffdad7",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#930012",
+                        "primary": "#ffffff",
+                        "surface-dim": "#131313",
+                        "tertiary-fixed": "#ffdad7",
+                        "inverse-on-surface": "#303030",
+                        "on-background": "#e2e2e2",
+                        "on-secondary-fixed": "#271900",
+                        "surface-variant": "#353535",
+                        "on-primary-fixed": "#161e00",
+                        "secondary-fixed-dim": "#ffba20",
+                        "on-secondary-fixed-variant": "#5e4200",
+                        "on-secondary": "#412d00",
+                        "surface-bright": "#393939",
+                        "on-surface": "#e2e2e2"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"],
+                        "michroma": ["Michroma", "sans-serif"],
+                        "mono": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0rem", "lg": "0rem", "xl": "0rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .michroma-heading {
+            font-family: 'Michroma', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        
+        /* Page Load Transitions */
+        @keyframes dashboardFadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        main > div {
+            animation: dashboardFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+        main > div:nth-child(1) { animation-delay: 0.1s; }
+        main > div:nth-child(2) { animation-delay: 0.2s; }
+        main > div:nth-child(3) { animation-delay: 0.3s; }
+        main > div:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+</head>
+
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
+    <!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#131313] dark:bg-[#131313]">
+    <div class="flex justify-between items-center w-full px-8 py-5 max-w-[1440px] mx-auto">
+        <div class="flex items-center">
+            <a href="index.html" class="hover:opacity-80 transition-opacity"><img alt="GridPulz Logo" class="h-32 w-auto mix-blend-lighten" src="gridpulz_logo.png"/></a>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="text-[#888888] hover:bg-[#353535] transition-colors p-2 active:scale-95 duration-100">
+                <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+            </button>
+            <button class="text-[#888888] hover:bg-[#353535] transition-colors p-2 active:scale-95 duration-100">
+                <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+            </button>
+        </div>
+    </div>
+</header>
+<main class="pt-48 pb-32 px-6 max-w-7xl mx-auto space-y-4">
+        <!-- Header Section -->
+        <div class="mb-8 border-l-4 border-[#BFFF00] pl-6 py-2">
+            <h1 class="michroma-heading text-4xl tracking-tighter text-white">System Analytics</h1>
+            <p class="font-mono text-sm text-[#888888] tracking-widest uppercase mt-2">Grid Performance Metrics // Terminal
+                ID: 492-X</p>
+        </div>
+        <!-- Session Stats Grid (Bento Style) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col justify-between h-40">
+                <span class="font-mono text-[10px] text-[#888888] uppercase tracking-widest">Total Sessions Today</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-mono text-5xl font-bold text-white">128</span>
+                    <span class="font-mono text-sm text-[#BFFF00]">+12%</span>
+                </div>
+                <div class="w-full h-1 bg-[#222222]">
+                    <div class="h-full bg-[#BFFF00] w-[65%]"></div>
+                </div>
+            </div>
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col justify-between h-40">
+                <span class="font-mono text-[10px] text-[#888888] uppercase tracking-widest">Avg Session Duration</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-mono text-5xl font-bold text-white">42</span>
+                    <span class="font-mono text-sm text-[#888888]">MIN</span>
+                </div>
+                <div class="w-full h-1 bg-[#222222]">
+                    <div class="h-full bg-white w-[42%]"></div>
+                </div>
+            </div>
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] flex flex-col justify-between h-40">
+                <span class="font-mono text-[10px] text-[#888888] uppercase tracking-widest">Energy Dispensed</span>
+                <div class="flex items-baseline gap-2">
+                    <span class="font-mono text-5xl font-bold text-[#BFFF00]">2,840</span>
+                    <span class="font-mono text-sm text-[#888888]">KWH</span>
+                </div>
+                <div class="w-full h-1 bg-[#222222]">
+                    <div class="h-full bg-[#BFFF00] w-[82%]"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Historical Load Chart -->
+        <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] mt-2">
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <h2 class="michroma-heading text-xl text-white">Historical Load</h2>
+                    <p class="font-mono text-[10px] text-[#888888] mt-2">24HR ENERGY OUTPUT VS AVG LOAD</p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 bg-[#BFFF00]"></div>
+                        <span class="font-mono text-[10px] uppercase text-[#888888]">Energy (kWh)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-[2px] bg-white"></div>
+                        <span class="font-mono text-[10px] uppercase text-[#888888]">Avg Load</span>
+                    </div>
+                </div>
+            </div>
+            <div class="relative h-64 w-full flex items-end justify-between gap-1 group">
+                <!-- Simple representative bar chart -->
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 40%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 30%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 25%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 20%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 15%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 35%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 60%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 85%;">
+                </div>
+                <div class="flex-1 bg-[#BFFF00] relative" style="height: 95%;"></div>
+                <div class="flex-1 bg-[#BFFF00] relative" style="height: 100%;"></div>
+                <div class="flex-1 bg-[#BFFF00] relative" style="height: 90%;"></div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 70%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 65%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 75%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 80%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 85%;">
+                </div>
+                <div class="flex-1 bg-[#BFFF00] relative" style="height: 90%;"></div>
+                <div class="flex-1 bg-[#BFFF00] relative" style="height: 95%;"></div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 70%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 50%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 45%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 40%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 35%;">
+                </div>
+                <div class="flex-1 bg-[#222222] hover:bg-[#BFFF00] transition-colors relative" style="height: 30%;">
+                </div>
+                <!-- SVG Line Overlay (Abstracted) -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none" preserveaspectratio="none">
+                    <polyline class="opacity-80" fill="none"
+                        points="0,180 100,160 200,170 300,150 400,120 500,80 600,40 700,30 800,50 900,90 1000,120 1100,100 1200,110"
+                        stroke="white" stroke-width="2"></polyline>
+                </svg>
+            </div>
+            <div class="flex justify-between mt-4 border-t border-[#222222] pt-2 font-mono text-[10px] text-[#888888]">
+                <span>00:00</span>
+                <span>06:00</span>
+                <span>12:00</span>
+                <span>18:00</span>
+                <span>23:59</span>
+            </div>
+        </div>
+        <!-- Peak Hours Heatmap -->
+        <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] mt-2">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="michroma-heading text-xl text-white">Peak Hours Heatmap</h2>
+                    <p class="font-mono text-[10px] text-[#888888] mt-2">LOAD INTENSITY BY HOUR</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-[9px] text-[#888888]">LOW</span>
+                    <div class="flex gap-1">
+                        <div class="w-3 h-3 bg-[#1b1b1b]"></div>
+                        <div class="w-3 h-3 bg-[#353535]"></div>
+                        <div class="w-3 h-3 bg-[#444933]"></div>
+                        <div class="w-3 h-3 bg-[#BFFF00]"></div>
+                    </div>
+                    <span class="font-mono text-[9px] text-[#888888]">PEAK</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-24 gap-1 sm:flex sm:justify-between w-full">
+                <!-- 24 blocks with varied intensity -->
+                <div class="h-12 flex-1 bg-[#1b1b1b] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">00</span></div>
+                <div class="h-12 flex-1 bg-[#1b1b1b] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">01</span></div>
+                <div class="h-12 flex-1 bg-[#1b1b1b] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">02</span></div>
+                <div class="h-12 flex-1 bg-[#1b1b1b] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">03</span></div>
+                <div class="h-12 flex-1 bg-[#1b1b1b] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">04</span></div>
+                <div class="h-12 flex-1 bg-[#353535] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">05</span></div>
+                <div class="h-12 flex-1 bg-[#353535] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">06</span></div>
+                <div class="h-12 flex-1 bg-[#444933] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">07</span></div>
+                <div class="h-12 flex-1 bg-[#BFFF00] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#161e00] opacity-0 group-hover:opacity-100 transition-opacity">08</span></div>
+                <div class="h-12 flex-1 bg-[#BFFF00] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#161e00] opacity-0 group-hover:opacity-100 transition-opacity">09</span></div>
+                <div class="h-12 flex-1 bg-[#BFFF00] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#161e00] opacity-0 group-hover:opacity-100 transition-opacity">10</span></div>
+                <div class="h-12 flex-1 bg-[#444933] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">11</span></div>
+                <div class="h-12 flex-1 bg-[#353535] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">12</span></div>
+                <div class="h-12 flex-1 bg-[#353535] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">13</span></div>
+                <div class="h-12 flex-1 bg-[#353535] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">14</span></div>
+                <div class="h-12 flex-1 bg-[#444933] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">15</span></div>
+                <div class="h-12 flex-1 bg-[#BFFF00] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#161e00] opacity-0 group-hover:opacity-100 transition-opacity">16</span></div>
+                <div class="h-12 flex-1 bg-[#BFFF00] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#161e00] opacity-0 group-hover:opacity-100 transition-opacity">17</span></div>
+                <div class="h-12 flex-1 bg-[#BFFF00] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#161e00] opacity-0 group-hover:opacity-100 transition-opacity">18</span></div>
+                <div class="h-12 flex-1 bg-[#444933] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">19</span></div>
+                <div class="h-12 flex-1 bg-[#353535] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">20</span></div>
+                <div class="h-12 flex-1 bg-[#353535] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">21</span></div>
+                <div class="h-12 flex-1 bg-[#1b1b1b] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">22</span></div>
+                <div class="h-12 flex-1 bg-[#1b1b1b] relative group"><span
+                        class="absolute bottom-1 right-1 font-mono text-[8px] text-[#888888] opacity-0 group-hover:opacity-100 transition-opacity">23</span></div>
+            </div>
+        </div>
+        <!-- Alert Status / Log -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] h-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="michroma-heading text-[12px] text-white">Grid Health Status</h3>
+                    <span class="bg-[#BFFF00] text-[#161e00] px-3 py-1 font-headline font-bold text-[10px] uppercase tracking-widest">Optimal</span>
+                </div>
+                <div class="space-y-4 font-mono">
+                    <div class="flex justify-between items-center text-[11px] pb-3 border-b border-[#222222]">
+                        <span class="text-[#888888]">Voltage Stability</span>
+                        <span class="text-white">99.8%</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px] pb-3 border-b border-[#222222]">
+                        <span class="text-[#888888]">Thermal Overhead</span>
+                        <span class="text-[#FFB800]">68%</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px]">
+                        <span class="text-[#888888]">Uptime (MTD)</span>
+                        <span class="text-white">99.992%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-[#111111] border border-[#222222] p-6 hover:border-[#BFFF00]/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(191,255,0,0.15)] transition-all duration-500 cursor-pointer group hover:bg-[#1a1a1a] h-full">
+                <h3 class="michroma-heading text-[12px] text-white mb-6">Critical Faults</h3>
+                <div class="space-y-4 font-mono">
+                    <div class="flex gap-4 items-start border-l-2 border-[#FF4444] pl-4">
+                        <span class="text-[#FF4444] text-[10px] font-bold mt-0.5">14:22</span>
+                        <div>
+                            <p class="text-[11px] text-white uppercase tracking-widest mb-1">Thermal Warning: Unit 4-B</p>
+                            <p class="text-[10px] text-[#888888] leading-relaxed">Auto-mitigation initiated. Throttled to 50kW.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start border-l-2 border-[#444933] pl-4">
+                        <span class="text-[#888888] text-[10px] mt-0.5">09:10</span>
+                        <div>
+                            <p class="text-[11px] text-white uppercase tracking-widest mb-1">Session Handshake Fail</p>
+                            <p class="text-[10px] text-[#888888] leading-relaxed">Station 12. Retry successful.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- BottomNavBar -->
+    <nav
+        class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 bg-[#131313]/80 backdrop-blur-xl border-t border-[#444933]/15 pb-safe">
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all active:opacity-80"
+            href="dashboard.html">
+            <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1">Monitor</span>
+        </a>
+        <a class="flex flex-col items-center justify-center bg-[#BFFF00] text-[#161e00] rounded-none px-6 py-2 active:opacity-80 border-t-2 border-[#BFFF00]"
+            href="analytics.html">
+            <span class="material-symbols-outlined" data-icon="analytics"
+                style="font-variation-settings: 'FILL' 1;">analytics</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1 font-bold">Analytics</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all active:opacity-80"
+            href="alerts.html">
+            <span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1">Alerts</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#888888] px-6 py-2 hover:text-white transition-all active:opacity-80"
+            href="systems.html">
+            <span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+            <span class="font-mono text-[10px] uppercase tracking-widest mt-1">System</span>
+        </a>
+    </nav>
+</body>
+
+</html>

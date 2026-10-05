@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+*.mov
+*.zip
+*.sqlite
+*.log
+.vscode/
+.kiro/
